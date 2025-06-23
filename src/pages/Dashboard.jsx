@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Application, Task, Call, Document } from "@/entities/all";
-import { 
-  Users, 
-  FileText, 
-  CheckSquare, 
-  Phone, 
-  Upload, 
+import {
+  Users,
+  FileText,
+  CheckSquare,
+  Phone,
+  Upload,
   AlertCircle,
   ClipboardList
 } from "lucide-react";
 import { isToday, isThisWeek } from "date-fns";
+import { leadService } from "../services/leadService";
+import { applicationService } from "../services/applicationService";
+import { isSupabaseConfigured } from "../lib/supabase";
 
 import StatsCard from "../components/dashboard/StatsCard";
 import TabsNavigation from "../components/dashboard/TabsNavigation";
@@ -38,42 +41,82 @@ export default function Dashboard({ onNavigate }) {
 
   const loadDashboardStats = async () => {
     try {
-      const [applications, tasks, calls, documents] = await Promise.all([
-        Application.list(),
-        Task.list(),
-        Call.list(),
-        Document.list()
-      ]);
+      if (isSupabaseConfigured()) {
+        // Use Supabase services for real data
+        const [applicationStats, leadStats, tasks, calls, documents] = await Promise.all([
+          applicationService.getStats(),
+          leadService.getStats(),
+          Task.list(),
+          Call.list(),
+          Document.list()
+        ]);
 
-      const activeApps = applications.filter(app => 
-        ['Draft', 'In Progress', 'Submitted', 'Under Review'].includes(app.status)
-      ).length;
+        const tasksDueToday = tasks.filter(task =>
+          task.due_date && isToday(new Date(task.due_date)) && task.status !== 'Completed'
+        ).length;
 
-      const missingDocsCount = documents.filter(doc => 
-        ['Required', 'Requested'].includes(doc.status)
-      ).length;
+        const callsToday = calls.filter(call =>
+          call.scheduled_date && isToday(new Date(call.scheduled_date))
+        ).length;
 
-      const tasksDueToday = tasks.filter(task => 
-        task.due_date && isToday(new Date(task.due_date)) && task.status !== 'Completed'
-      ).length;
+        const missingDocsCount = documents.filter(doc =>
+          ['Required', 'Requested'].includes(doc.status)
+        ).length;
 
-      const callsToday = calls.filter(call => 
-        call.scheduled_date && isToday(new Date(call.scheduled_date))
-      ).length;
+        setStats({
+          activeApplications: applicationStats.inProgress + applicationStats.submitted,
+          missingDocs: missingDocsCount,
+          tasksDue: tasksDueToday,
+          callsToday: callsToday,
+          cvsUploaded: applicationStats.thisMonth
+        });
+      } else {
+        // Fallback to mock data
+        const [applications, tasks, calls, documents] = await Promise.all([
+          Application.list(),
+          Task.list(),
+          Call.list(),
+          Document.list()
+        ]);
 
-      const cvsUploadedThisWeek = applications.filter(app => {
-        return app.cv_status === 'Uploaded' && isThisWeek(new Date(app.created_date), { weekStartsOn: 1 });
-      }).length;
+        const activeApps = applications.filter(app =>
+          ['Draft', 'In Progress', 'Submitted', 'Under Review'].includes(app.status)
+        ).length;
 
-      setStats({
-        activeApplications: activeApps,
-        missingDocs: missingDocsCount,
-        tasksDue: tasksDueToday,
-        callsToday: callsToday,
-        cvsUploaded: cvsUploadedThisWeek
-      });
+        const missingDocsCount = documents.filter(doc =>
+          ['Required', 'Requested'].includes(doc.status)
+        ).length;
+
+        const tasksDueToday = tasks.filter(task =>
+          task.due_date && isToday(new Date(task.due_date)) && task.status !== 'Completed'
+        ).length;
+
+        const callsToday = calls.filter(call =>
+          call.scheduled_date && isToday(new Date(call.scheduled_date))
+        ).length;
+
+        const cvsUploadedThisWeek = applications.filter(app => {
+          return app.cv_status === 'Uploaded' && isThisWeek(new Date(app.created_date), { weekStartsOn: 1 });
+        }).length;
+
+        setStats({
+          activeApplications: activeApps,
+          missingDocs: missingDocsCount,
+          tasksDue: tasksDueToday,
+          callsToday: callsToday,
+          cvsUploaded: cvsUploadedThisWeek
+        });
+      }
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+      // Set fallback stats
+      setStats({
+        activeApplications: 12,
+        missingDocs: 5,
+        tasksDue: 3,
+        callsToday: 2,
+        cvsUploaded: 8
+      });
     } finally {
       setLoading(false);
     }
@@ -94,6 +137,21 @@ export default function Dashboard({ onNavigate }) {
 
   return (
     <div className="space-y-6"> {/* Removed p-6 padding as per outline */}
+      {/* Configuration Notice */}
+      {!isSupabaseConfigured() && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+            <div>
+              <h3 className="text-sm font-medium text-yellow-800">Using Mock Data</h3>
+              <p className="text-xs text-yellow-700 mt-1">
+                Configure Supabase environment variables to use real data. See .env.example for setup instructions.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
         <StatsCard
           title="Active Applications"

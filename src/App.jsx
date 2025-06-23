@@ -12,42 +12,69 @@ function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(import.meta.env.DEV); // Show in development by default
   const [adminKeySequence, setAdminKeySequence] = useState('');
 
   useEffect(() => {
-    // Check if user is authenticated on app load
-    const currentUser = User.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    // Secret admin panel activation
-    const handleKeyPress = (e) => {
-      // Ignore if typing in input fields
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        return;
-      }
-
-      const newSequence = adminKeySequence + e.key.toLowerCase();
-      setAdminKeySequence(newSequence);
-
-      // Secret code: "admin123"
-      if (newSequence.includes('admin123')) {
-        setShowAdminPanel(true);
-        setAdminKeySequence('');
-        console.log('Admin panel activated!');
-      }
-
-      // Reset sequence if it gets too long
-      if (newSequence.length > 15) {
-        setAdminKeySequence('');
+    // Check if user is authenticated on app load and listen to auth changes
+    const checkUser = async () => {
+      try {
+        const currentUser = await User.me();
+        setUser(currentUser);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    checkUser();
+
+    // Listen to auth state changes
+    const { data: { subscription } } = User.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        setUser(session?.user || null);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Admin panel activation logic
+    const handleKeyPress = (e) => {
+      // In production, require secret code. In development, admin panel is always available
+      if (import.meta.env.PROD) {
+        // Ignore if typing in input fields
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          return;
+        }
+
+        const newSequence = adminKeySequence + e.key.toLowerCase();
+        setAdminKeySequence(newSequence);
+
+        // Secret code: "admin123"
+        if (newSequence.includes('admin123')) {
+          setShowAdminPanel(true);
+          setAdminKeySequence('');
+          console.log('Admin panel activated!');
+        }
+
+        // Reset sequence if it gets too long
+        if (newSequence.length > 15) {
+          setAdminKeySequence('');
+        }
+      }
+    };
+
+    // Only add event listener in production
+    if (import.meta.env.PROD) {
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }
   }, [adminKeySequence]);
 
   const handleLogout = async () => {
@@ -96,10 +123,15 @@ function App() {
           <div className="flex items-center justify-between">
             <h1
               className="text-2xl font-bold text-gray-900 cursor-pointer select-none"
-              onDoubleClick={() => setShowAdminPanel(true)}
-              title="Double-click to activate admin panel"
+              onDoubleClick={() => import.meta.env.DEV && setShowAdminPanel(true)}
+              title={import.meta.env.DEV ? "Double-click to toggle admin panel" : "NWI Portal"}
             >
               NWI Portal
+              {import.meta.env.DEV && (
+                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                  DEV
+                </span>
+              )}
             </h1>
             <div className="flex items-center space-x-4">
               <div className="flex space-x-4">
