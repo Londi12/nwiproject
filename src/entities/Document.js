@@ -151,16 +151,34 @@ export class Document {
     try {
       const queryParams = new URLSearchParams(filters);
       const response = await fetch(`/api/documents?${queryParams}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch documents');
       }
-      
+
       const data = await response.json();
       return data.map(docData => new Document(docData));
     } catch (error) {
       console.error('Error fetching documents:', error);
       // Return mock data for development
+      return Document.getMockData();
+    }
+  }
+
+  static async list(sortBy = '-created_date') {
+    try {
+      // For now, just call getAll and sort locally
+      const documents = await this.getAll();
+
+      // Simple sorting logic
+      if (sortBy.startsWith('-')) {
+        const field = sortBy.substring(1);
+        return documents.sort((a, b) => new Date(b[field]) - new Date(a[field]));
+      } else {
+        return documents.sort((a, b) => new Date(a[sortBy]) - new Date(b[sortBy]));
+      }
+    } catch (error) {
+      console.error('Error listing documents:', error);
       return Document.getMockData();
     }
   }
@@ -238,13 +256,13 @@ export class Document {
   // Business logic methods
   getStatusColor() {
     const statusColors = {
-      'Required': 'red',
+      'Required': 'slate',
       'Requested': 'yellow',
       'Received': 'blue',
       'Under Review': 'orange',
       'Approved': 'green',
-      'Needs Correction': 'red',
-      'Rejected': 'red',
+      'Needs Correction': 'slate',
+      'Rejected': 'slate',
       'Expired': 'gray'
     };
     return statusColors[this.status] || 'gray';

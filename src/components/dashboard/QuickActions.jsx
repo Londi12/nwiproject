@@ -14,14 +14,14 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-export default function QuickActions({ onNavigate, loading = false }) {
+export default function QuickActions({ onNavigate, setActiveTab, loading = false }) {
   const quickActions = [
     {
       title: 'Add New Lead',
       description: 'Create a new lead record',
       icon: Plus,
       color: 'bg-blue-50 text-blue-600 border-blue-200',
-      action: () => onNavigate?.('leads'),
+      action: () => setActiveTab?.('Leads'),
       primary: true
     },
     {
@@ -29,7 +29,7 @@ export default function QuickActions({ onNavigate, loading = false }) {
       description: 'Manage existing leads',
       icon: Users,
       color: 'bg-green-50 text-green-600 border-green-200',
-      action: () => onNavigate?.('leads')
+      action: () => setActiveTab?.('Leads')
     },
     {
       title: 'Schedule Call',
@@ -85,38 +85,38 @@ export default function QuickActions({ onNavigate, loading = false }) {
 
   return (
     <Card className="rounded-2xl border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200 bg-white">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
+      <CardHeader className="pb-3 sm:pb-4">
+        <CardTitle className="text-base sm:text-lg font-semibold text-slate-900">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {quickActions.map((action, index) => (
           <button
             key={index}
             onClick={action.action}
-            className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all duration-200 hover:shadow-sm group ${
-              action.primary 
-                ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' 
+            className={`w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all duration-200 hover:shadow-sm group active:scale-95 ${
+              action.primary
+                ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
                 : 'bg-white border-slate-200 hover:bg-slate-50'
             }`}
           >
-            <div className="flex items-center space-x-3">
-              <div className={`p-2 rounded-lg ${action.color}`}>
-                <action.icon className="w-4 h-4" />
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+              <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${action.color}`}>
+                <action.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <div className="text-left">
-                <p className={`text-sm font-medium ${
+              <div className="text-left min-w-0 flex-1">
+                <p className={`text-xs sm:text-sm font-medium truncate ${
                   action.primary ? 'text-blue-900' : 'text-slate-900'
                 }`}>
                   {action.title}
                 </p>
-                <p className={`text-xs ${
+                <p className={`text-xs truncate ${
                   action.primary ? 'text-blue-600' : 'text-slate-500'
                 }`}>
                   {action.description}
                 </p>
               </div>
             </div>
-            <ArrowRight className={`w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 ${
+            <ArrowRight className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 group-hover:translate-x-1 flex-shrink-0 ${
               action.primary ? 'text-blue-600' : 'text-slate-400'
             }`} />
           </button>

@@ -100,11 +100,11 @@ export default function Layout({ children, currentPageName, onNavigate }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button onClick={() => onNavigate?.('Dashboard')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-500 via-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-r from-slate-900 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Plane className="text-white w-5 h-5" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl lg:text-2xl font-bold text-slate-900">NWI Visas</h1>
+                <h1 className="text-xl lg:text-2xl font-bold text-slate-900">Visa Flow</h1>
                 <p className="text-xs text-slate-500">Immigration Services</p>
               </div>
             </button>
@@ -273,7 +273,7 @@ export default function Layout({ children, currentPageName, onNavigate }) {
                 <DropdownMenuLabel>
                   <div>
                     <p className="font-medium">Immigration Consultant</p>
-                    <p className="text-xs text-slate-500">consultant@nwivisas.com</p>
+                    <p className="text-xs text-slate-500">consultant@visaflow.com</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

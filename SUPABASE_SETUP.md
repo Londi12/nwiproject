@@ -1,12 +1,12 @@
-# Supabase Setup Guide for NWI Visas CRM
+# Supabase Setup Guide for Visa Flow CRM
 
-This guide will help you set up Supabase authentication and database for the NWI Visas CRM system.
+This guide will help you set up Supabase authentication and database for the Visa Flow CRM system.
 
 ## Prerequisites
 
 1. A Supabase account (sign up at [supabase.com](https://supabase.com))
 2. Node.js and npm installed
-3. The NWI Visas project cloned locally
+3. The Visa Flow project cloned locally
 
 ## Step 1: Create a Supabase Project
 
@@ -14,7 +14,7 @@ This guide will help you set up Supabase authentication and database for the NWI
 2. Click "New Project"
 3. Choose your organization
 4. Enter project details:
-   - **Name**: `nwi-visas-crm`
+   - **Name**: `visa-flow-crm`
    - **Database Password**: Choose a strong password
    - **Region**: Choose the closest region to your users
 5. Click "Create new project"

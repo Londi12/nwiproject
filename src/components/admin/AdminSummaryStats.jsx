@@ -42,7 +42,7 @@ export default function AdminSummaryStats({ adminStats, loading }) {
     submitted: 'bg-blue-100 text-blue-800',
     processing: 'bg-yellow-100 text-yellow-800',
     approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800'
+    rejected: 'bg-slate-100 text-slate-800'
   };
 
   const totalApplications = adminStats?.totalApplications || 0;

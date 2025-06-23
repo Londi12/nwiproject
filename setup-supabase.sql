@@ -1,4 +1,4 @@
--- NWI Visas CRM Database Schema
+-- Visa Flow CRM Database Schema
 -- Run this in your Supabase SQL Editor
 
 -- 0. User Profiles Table (extends Supabase auth.users for Associates & Admin)
@@ -227,6 +227,136 @@ CREATE INDEX idx_calls_consultant ON calls(consultant);
 CREATE INDEX idx_documents_status ON documents(status);
 CREATE INDEX idx_documents_application_id ON documents(application_id);
 CREATE INDEX idx_documents_document_type ON documents(document_type);
+
+-- 6. Knowledge Base Table
+CREATE TABLE IF NOT EXISTS knowledge_base (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  visa_code VARCHAR(50),
+  country VARCHAR(100) NOT NULL,
+  visa_type VARCHAR(255) NOT NULL,
+  category VARCHAR(100) DEFAULT 'Work Visa',
+  icon VARCHAR(100),
+  eligibility_criteria JSONB,
+  application_process JSONB,
+  key_requirements JSONB,
+  official_links JSONB,
+  points_system JSONB,
+  occupation_lists JSONB,
+  language_requirements JSONB,
+  salary_thresholds JSONB,
+  processing_times VARCHAR(255),
+  fees JSONB,
+  validity_period VARCHAR(100),
+  pathway_to_pr BOOLEAN DEFAULT false,
+  family_inclusion BOOLEAN DEFAULT false,
+  status VARCHAR(50) DEFAULT 'Active',
+  last_updated TIMESTAMP DEFAULT NOW(),
+  updated_by VARCHAR(255),
+  version_number INTEGER DEFAULT 1,
+  tags JSONB,
+  search_keywords TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 7. Occupation-Specific Knowledge Base Table
+CREATE TABLE IF NOT EXISTS occupation_knowledge (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  occupation_title VARCHAR(255) NOT NULL,
+  anzsco_code VARCHAR(20),
+  occupation_category VARCHAR(100),
+  skill_level INTEGER,
+  country VARCHAR(100) NOT NULL,
+  visa_types JSONB,
+  occupation_list VARCHAR(100), -- MLTSSL, STSOL, ROL, etc.
+  eligibility_factors JSONB,
+  application_steps JSONB,
+  skills_assessment JSONB,
+  experience_requirements JSONB,
+  education_requirements JSONB,
+  english_requirements JSONB,
+  licensing_requirements JSONB,
+  salary_benchmarks JSONB,
+  job_outlook JSONB,
+  related_occupations JSONB,
+  assessment_authorities JSONB,
+  processing_notes TEXT,
+  special_conditions JSONB,
+  success_tips JSONB,
+  common_issues JSONB,
+  status VARCHAR(50) DEFAULT 'Active',
+  last_updated TIMESTAMP DEFAULT NOW(),
+  updated_by VARCHAR(255),
+  version_number INTEGER DEFAULT 1,
+  tags JSONB,
+  search_keywords TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Enable RLS for knowledge base
+ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
+
+-- Knowledge base policies
+CREATE POLICY "Enable read access for all users" ON knowledge_base FOR SELECT USING (true);
+CREATE POLICY "Enable insert for admins" ON knowledge_base FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM user_profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'manager')
+  )
+);
+CREATE POLICY "Enable update for admins" ON knowledge_base FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM user_profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'manager')
+  )
+);
+CREATE POLICY "Enable delete for admins" ON knowledge_base FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM user_profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'manager')
+  )
+);
+
+-- Knowledge base indexes
+CREATE INDEX idx_knowledge_base_country ON knowledge_base(country);
+CREATE INDEX idx_knowledge_base_visa_type ON knowledge_base(visa_type);
+CREATE INDEX idx_knowledge_base_category ON knowledge_base(category);
+CREATE INDEX idx_knowledge_base_status ON knowledge_base(status);
+CREATE INDEX idx_knowledge_base_search ON knowledge_base USING gin(to_tsvector('english', search_keywords));
+
+-- Enable RLS for occupation knowledge
+ALTER TABLE occupation_knowledge ENABLE ROW LEVEL SECURITY;
+
+-- Occupation knowledge policies
+CREATE POLICY "Enable read access for all users" ON occupation_knowledge FOR SELECT USING (true);
+CREATE POLICY "Enable insert for admins" ON occupation_knowledge FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM user_profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'manager')
+  )
+);
+CREATE POLICY "Enable update for admins" ON occupation_knowledge FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM user_profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'manager')
+  )
+);
+CREATE POLICY "Enable delete for admins" ON occupation_knowledge FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM user_profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'manager')
+  )
+);
+
+-- Occupation knowledge indexes
+CREATE INDEX idx_occupation_knowledge_country ON occupation_knowledge(country);
+CREATE INDEX idx_occupation_knowledge_anzsco ON occupation_knowledge(anzsco_code);
+CREATE INDEX idx_occupation_knowledge_category ON occupation_knowledge(occupation_category);
+CREATE INDEX idx_occupation_knowledge_skill_level ON occupation_knowledge(skill_level);
+CREATE INDEX idx_occupation_knowledge_status ON occupation_knowledge(status);
+CREATE INDEX idx_occupation_knowledge_search ON occupation_knowledge USING gin(to_tsvector('english', search_keywords));
 
 -- Function to automatically create user profile when user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()

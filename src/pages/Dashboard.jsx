@@ -17,6 +17,7 @@ import { isSupabaseConfigured } from "../lib/supabase";
 import StatsCard from "../components/dashboard/StatsCard";
 import TabsNavigation from "../components/dashboard/TabsNavigation";
 import OverviewPanel from "../components/dashboard/panels/OverviewPanel";
+import LeadsPanel from "../components/dashboard/panels/LeadsPanel";
 import ApplicationsPanel from "../components/dashboard/panels/ApplicationsPanel";
 import TasksPanel from "../components/dashboard/panels/TasksPanel";
 import CallsPanel from "../components/dashboard/panels/CallsPanel";
@@ -125,6 +126,7 @@ export default function Dashboard({ onNavigate }) {
   const renderActivePanel = () => {
     switch (activeTab) {
       case 'Overview': return <OverviewPanel setActiveTab={setActiveTab} onNavigate={onNavigate} />;
+      case 'Leads': return <LeadsPanel />;
       case 'Applications': return <ApplicationsPanel />;
       case 'Tasks': return <TasksPanel />;
       case 'Calls': return <CallsPanel />;
@@ -152,7 +154,7 @@ export default function Dashboard({ onNavigate }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5">
         <StatsCard
           title="Active Applications"
           value={stats.activeApplications}

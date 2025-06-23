@@ -1,4 +1,6 @@
-// Lead Entity Class for NWI Visas Immigration Services
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
+
+// Lead Entity Class for Visa Flow Immigration Services
 export class Lead {
   constructor(data = {}) {
     this.id = data.id || this.generateId();
@@ -64,47 +66,114 @@ export class Lead {
 
   // Static methods for CRUD operations
   static async create(leadData) {
-    try {
-      const lead = new Lead(leadData);
-      lead.updated_date = new Date().toISOString();
+    const lead = new Lead(leadData);
+    lead.updated_date = new Date().toISOString();
 
-      // Calculate lead score
-      lead.lead_score = lead.calculateLeadScore();
+    // Calculate lead score
+    lead.lead_score = lead.calculateLeadScore();
 
-      // Simulate API call
-      const response = await fetch('/api/leads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(lead),
-      });
+    // Use Supabase if configured
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('leads')
+          .insert([{
+            id: lead.id,
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            secondary_phone: lead.secondary_phone,
+            source: lead.source,
+            source_details: lead.source_details,
+            status: lead.status,
+            priority: lead.priority,
+            notes: lead.notes,
+            last_contacted: lead.last_contacted,
+            next_follow_up: lead.next_follow_up,
+            assigned_to: lead.assigned_to,
+            interest_area: lead.interest_area,
+            secondary_interests: lead.secondary_interests,
+            target_country: lead.target_country,
+            current_country: lead.current_country,
+            nationality: lead.nationality,
+            age: lead.age,
+            education_level: lead.education_level,
+            work_experience_years: lead.work_experience_years,
+            occupation: lead.occupation,
+            language_skills: lead.language_skills,
+            budget_range: lead.budget_range,
+            timeline: lead.timeline,
+            family_members: lead.family_members,
+            spouse_details: lead.spouse_details,
+            consultation_requested: lead.consultation_requested,
+            consultation_date: lead.consultation_date,
+            referral_source_name: lead.referral_source_name,
+            lead_score: lead.lead_score,
+            created_date: lead.created_date,
+            updated_date: lead.updated_date
+          }])
+          .select()
+          .single();
 
-      if (!response.ok) {
-        throw new Error('Failed to create lead');
+        if (error) throw error;
+
+        return new Lead(data);
+      } catch (error) {
+        console.error('Error creating lead in Supabase:', error);
+        throw error;
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating lead:', error);
-      throw error;
+    } else {
+      // Development mode - simulate success
+      console.log('Development mode: Lead created locally', lead);
+      return lead;
     }
   }
 
   static async getAll(filters = {}) {
-    try {
-      const queryParams = new URLSearchParams(filters);
-      const response = await fetch(`/api/leads?${queryParams}`);
+    // Use Supabase if configured, otherwise fall back to mock data
+    if (isSupabaseConfigured) {
+      try {
+        let query = supabase
+          .from('leads')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch leads');
+        // Apply filters if provided
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value && value !== 'all') {
+            query = query.eq(key, value);
+          }
+        });
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        return data.map(leadData => new Lead(leadData));
+      } catch (error) {
+        console.error('Error fetching leads from Supabase:', error);
+        // Fall back to mock data on error
+        return Lead.getMockData();
       }
+    } else {
+      // Development mode - use mock data
+      return Lead.getMockData();
+    }
+  }
 
-      const data = await response.json();
-      return data.map(leadData => new Lead(leadData));
+  static async list(sortBy = '-created_date') {
+    try {
+      const leads = await this.getAll();
+
+      // Simple sorting logic
+      if (sortBy.startsWith('-')) {
+        const field = sortBy.substring(1);
+        return leads.sort((a, b) => new Date(b[field]) - new Date(a[field]));
+      } else {
+        return leads.sort((a, b) => new Date(a[sortBy]) - new Date(b[sortBy]));
+      }
     } catch (error) {
-      console.error('Error fetching leads:', error);
-      // Return mock data for development
+      console.error('Error listing leads:', error);
       return Lead.getMockData();
     }
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Application } from "@/entities/all";
+import { Application, Document } from "@/entities/all";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,19 +7,24 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Filter, Eye, FileText, Phone } from "lucide-react";
+import { Plus, Search, Filter, Eye, FileText, Phone, Calendar, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import NewApplicationDialog from "../../applications/NewApplicationDialog";
+import ApplicationDetailsDialog from "../../applications/ApplicationDetailsDialog";
 
 export default function ApplicationsPanel() {
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNewAppDialog, setShowNewAppDialog] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
   useEffect(() => {
     loadApplications();
+    loadDocuments();
   }, []);
 
   useEffect(() => {
@@ -38,6 +43,15 @@ export default function ApplicationsPanel() {
     }
   };
 
+  const loadDocuments = async () => {
+    try {
+      const data = await Document.list();
+      setDocuments(data);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    }
+  };
+
   const filterApplications = () => {
     let filtered = [...applications];
 
@@ -46,7 +60,7 @@ export default function ApplicationsPanel() {
         app =>
           app.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           app.client_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          app.case_number?.toLowerCase().includes(searchTerm.toLowerCase())
+          app.application_number?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -59,20 +73,41 @@ export default function ApplicationsPanel() {
 
   const getStatusColor = (status) => {
     const colors = {
-      'Draft': 'bg-gray-100 text-gray-800',
+      'Draft': 'bg-slate-100 text-slate-800',
       'In Progress': 'bg-blue-100 text-blue-800',
-      'Processing': 'bg-orange-100 text-orange-800',
       'Submitted': 'bg-purple-100 text-purple-800',
       'Under Review': 'bg-yellow-100 text-yellow-800',
+      'Additional Info Required': 'bg-orange-100 text-orange-800',
+      'Interview Scheduled': 'bg-blue-100 text-blue-800',
+      'Decision Made': 'bg-purple-100 text-purple-800',
       'Approved': 'bg-green-100 text-green-800',
-      'Rejected': 'bg-red-100 text-red-800'
+      'Rejected': 'bg-red-100 text-red-800',
+      'Withdrawn': 'bg-slate-100 text-slate-800',
+      'On Hold': 'bg-yellow-100 text-yellow-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
+  const getStatusIcon = (status) => {
+    const icons = {
+      'Draft': <FileText className="w-3 h-3" />,
+      'In Progress': <Clock className="w-3 h-3" />,
+      'Submitted': <CheckCircle className="w-3 h-3" />,
+      'Under Review': <Eye className="w-3 h-3" />,
+      'Additional Info Required': <AlertTriangle className="w-3 h-3" />,
+      'Interview Scheduled': <Calendar className="w-3 h-3" />,
+      'Decision Made': <CheckCircle className="w-3 h-3" />,
+      'Approved': <CheckCircle className="w-3 h-3" />,
+      'Rejected': <AlertTriangle className="w-3 h-3" />,
+      'Withdrawn': <FileText className="w-3 h-3" />,
+      'On Hold': <Clock className="w-3 h-3" />
+    };
+    return icons[status] || <FileText className="w-3 h-3" />;
+  };
+
   const getCvStatusColor = (status) => {
     const colors = {
-      'Not Uploaded': 'bg-red-100 text-red-800',
+      'Not Uploaded': 'bg-slate-100 text-slate-800',
       'Uploaded': 'bg-blue-100 text-blue-800',
       'Needs Update': 'bg-orange-100 text-orange-800',
       'Updated': 'bg-green-100 text-green-800',
@@ -82,22 +117,96 @@ export default function ApplicationsPanel() {
   };
 
   const getDocumentStatus = (app) => {
-    // Mock document status based on completion percentage
-    if (app.completion_percentage < 50) return { missing: 4, status: 'bg-red-100 text-red-800' };
-    if (app.completion_percentage < 80) return { missing: 2, status: 'bg-orange-100 text-orange-800' };
-    return { missing: 0, status: 'bg-green-100 text-green-800' };
+    // Get documents for this application
+    const appDocs = documents.filter(doc => doc.application_id === app.id);
+
+    if (appDocs.length === 0) {
+      return {
+        received: 0,
+        approved: 0,
+        outstanding: 0,
+        status: 'bg-slate-100 text-slate-800',
+        label: 'No docs'
+      };
+    }
+
+    const received = appDocs.filter(doc =>
+      ['Received', 'Under Review', 'Approved', 'Needs Correction'].includes(doc.status)
+    ).length;
+
+    const approved = appDocs.filter(doc => doc.status === 'Approved').length;
+    const outstanding = appDocs.filter(doc =>
+      ['Required', 'Requested'].includes(doc.status)
+    ).length;
+
+    // Determine status color based on document completion
+    let status = 'bg-slate-100 text-slate-800';
+    let label = `${received}/${appDocs.length}`;
+
+    if (outstanding > 0) {
+      status = 'bg-red-100 text-red-800';
+      label = `${outstanding} missing`;
+    } else if (approved === appDocs.length) {
+      status = 'bg-green-100 text-green-800';
+      label = 'Complete';
+    } else if (received > 0) {
+      status = 'bg-orange-100 text-orange-800';
+      label = 'In review';
+    }
+
+    return { received, approved, outstanding, status, label };
   };
 
   const handleViewApplication = (app) => {
-    alert(`Viewing application for ${app.client_name}\nVisa Type: ${app.visa_type}\nStatus: ${app.status}\nCase Number: ${app.case_number}`);
+    setSelectedApplication(app);
+    setShowDetailsDialog(true);
   };
 
   const handleViewDocuments = (app) => {
-    alert(`Opening documents for ${app.client_name}\nApplication ID: ${app.id}\nCompletion: ${app.completion_percentage}%`);
+    // Filter documents for this application and visa type
+    const appDocs = documents.filter(doc => doc.application_id === app.id);
+    const visaSpecificDocs = getVisaSpecificDocuments(app.visa_type);
+
+    const docSummary = {
+      received: appDocs.filter(doc => ['Received', 'Under Review', 'Approved'].includes(doc.status)),
+      approved: appDocs.filter(doc => doc.status === 'Approved'),
+      outstanding: appDocs.filter(doc => ['Required', 'Requested'].includes(doc.status)),
+      visaSpecific: visaSpecificDocs
+    };
+
+    const message = `Documents for ${app.client_name} (${app.visa_type})\n\n` +
+      `📄 Received: ${docSummary.received.length}\n` +
+      `✅ Approved: ${docSummary.approved.length}\n` +
+      `⏳ Outstanding: ${docSummary.outstanding.length}\n\n` +
+      `Required for ${app.visa_type}:\n${visaSpecificDocs.join(', ')}`;
+
+    alert(message);
   };
 
   const handleScheduleCall = (app) => {
-    alert(`Scheduling call with ${app.client_name}\nEmail: ${app.client_email}\nConsultant: ${app.assigned_consultant}`);
+    const callDetails = `Schedule Call - ${app.client_name}\n\n` +
+      `📧 Email: ${app.client_email || 'Not provided'}\n` +
+      `📱 Phone: ${app.client_phone || 'Not provided'}\n` +
+      `🎯 Visa Type: ${app.visa_type}\n` +
+      `📊 Status: ${app.status}\n` +
+      `👨‍💼 Consultant: ${app.assigned_consultant || 'Unassigned'}\n` +
+      `📈 Progress: ${app.completion_percentage}%`;
+
+    alert(callDetails);
+  };
+
+  const getVisaSpecificDocuments = (visaType) => {
+    const docRequirements = {
+      'Express Entry': ['Passport', 'IELTS Results', 'Education Certificates', 'Experience Letters', 'Police Clearance'],
+      'Family Sponsorship': ['Passport', 'Birth Certificate', 'Marriage Certificate', 'Police Clearance', 'Medical Exam'],
+      'Student Visa': ['Passport', 'Education Certificates', 'IELTS Results', 'Bank Statements', 'Letter of Acceptance'],
+      'Work Permit': ['Passport', 'LMIA', 'Experience Letters', 'Education Certificates', 'Medical Exam'],
+      'Visitor Visa': ['Passport', 'Bank Statements', 'Travel Itinerary', 'Invitation Letter'],
+      'Business Immigration': ['Passport', 'Business Plan', 'Financial Statements', 'Experience Letters', 'Education Certificates'],
+      'Provincial Nominee': ['Passport', 'IELTS Results', 'Education Certificates', 'Experience Letters', 'Provincial Nomination']
+    };
+
+    return docRequirements[visaType] || ['Passport', 'Supporting Documents'];
   };
 
   return (
@@ -135,11 +244,15 @@ export default function ApplicationsPanel() {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="Draft">Draft</SelectItem>
               <SelectItem value="In Progress">In Progress</SelectItem>
-              <SelectItem value="Processing">Processing</SelectItem>
               <SelectItem value="Submitted">Submitted</SelectItem>
               <SelectItem value="Under Review">Under Review</SelectItem>
+              <SelectItem value="Additional Info Required">Additional Info Required</SelectItem>
+              <SelectItem value="Interview Scheduled">Interview Scheduled</SelectItem>
+              <SelectItem value="Decision Made">Decision Made</SelectItem>
               <SelectItem value="Approved">Approved</SelectItem>
               <SelectItem value="Rejected">Rejected</SelectItem>
+              <SelectItem value="Withdrawn">Withdrawn</SelectItem>
+              <SelectItem value="On Hold">On Hold</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" className="bg-white">
@@ -183,7 +296,7 @@ export default function ApplicationsPanel() {
                     <TableCell className="py-4 font-medium">
                       <div>
                         <p className="font-semibold text-slate-900">{app.client_name}</p>
-                        <p className="text-xs text-slate-500">{app.case_number}</p>
+                        <p className="text-xs text-slate-500">{app.application_number}</p>
                       </div>
                     </TableCell>
                     <TableCell className="py-4 text-sm">{app.country || 'Not specified'}</TableCell>
@@ -193,7 +306,8 @@ export default function ApplicationsPanel() {
                       </Badge>
                     </TableCell>
                     <TableCell className="py-4">
-                      <Badge variant="secondary" className={getStatusColor(app.status)}>
+                      <Badge variant="secondary" className={`${getStatusColor(app.status)} flex items-center gap-1`}>
+                        {getStatusIcon(app.status)}
                         {app.status}
                       </Badge>
                     </TableCell>
@@ -204,15 +318,9 @@ export default function ApplicationsPanel() {
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      {docStatus.missing > 0 ? (
-                        <Badge variant="secondary" className="bg-red-100 text-red-800">
-                          {docStatus.missing} missing
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          Complete
-                        </Badge>
-                      )}
+                      <Badge variant="secondary" className={docStatus.status}>
+                        {docStatus.label}
+                      </Badge>
                     </TableCell>
                     <TableCell className="py-4">
                       <Badge variant="secondary" className={getCvStatusColor(app.cv_status)}>
@@ -258,6 +366,13 @@ export default function ApplicationsPanel() {
       <NewApplicationDialog
         open={showNewAppDialog}
         onOpenChange={setShowNewAppDialog}
+        onSuccess={loadApplications}
+      />
+
+      <ApplicationDetailsDialog
+        application={selectedApplication}
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
         onSuccess={loadApplications}
       />
     </div>

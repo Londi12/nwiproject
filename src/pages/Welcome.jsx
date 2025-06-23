@@ -60,13 +60,28 @@ export default function WelcomePage({ onNavigate }) {
 
   const handleLogin = async () => {
     try {
+      console.log('🔐 Starting associate login...');
       const result = await User.login();
-      console.log('Login successful:', result);
+      console.log('🔐 Login result:', result);
 
-      // The App.jsx auth state listener should handle the navigation automatically
-      // No need to manually navigate or reload
+      // Check if login was successful
+      if (result && result.user) {
+        console.log('✅ Login successful, user:', result.user);
+
+        // Since the auth callback timing is off, let's manually trigger navigation
+        console.log('🏠 Manually triggering navigation to dashboard...');
+        if (onNavigate) {
+          onNavigate('dashboard');
+        } else {
+          // Fallback: reload the page to trigger auth check
+          console.log('🔄 No onNavigate prop, reloading page...');
+          window.location.reload();
+        }
+      } else {
+        console.log('❌ Login failed - no user returned');
+      }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('❌ Login failed:', error);
       alert('Login failed. Please try again.');
     }
   };
@@ -77,29 +92,29 @@ export default function WelcomePage({ onNavigate }) {
       <header className="px-6 py-4 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 bg-gradient-to-r from-slate-900 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
               <Plane className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">NWI Visas</h1>
+              <h1 className="text-xl font-bold text-slate-900">Visa Flow</h1>
               <p className="text-xs text-slate-500">Immigration Services</p>
             </div>
           </div>
           <div className="flex items-center gap-4 text-sm text-slate-600">
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-blue-600" />
-              <span className="font-medium">+1 (647) 560-8677</span>
+              <span className="font-medium">+1 (555) 123-4567</span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <Mail className="w-4 h-4 text-blue-600" />
-              <span>info@nwivisas.com</span>
+              <span>info@visaflow.com</span>
             </div>
             {import.meta.env.DEV && onNavigate && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onNavigate('admin')}
-                className="border-red-200 text-red-600 hover:bg-red-50"
+                className="border-slate-200 text-slate-600 hover:bg-slate-50"
               >
                 <Lock className="w-3 h-3 mr-1" />
                 Admin (DEV)
@@ -120,7 +135,7 @@ export default function WelcomePage({ onNavigate }) {
             <TabsContent value="login">
               <Card className="border-0 shadow-lg rounded-xl">
                 <CardHeader className="text-center pb-6">
-                  <CardTitle className="text-xl">NWI Visas CRM</CardTitle>
+                  <CardTitle className="text-xl">Visa Flow CRM</CardTitle>
                   <CardDescription>Internal access for registered associates.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -204,7 +219,7 @@ export default function WelcomePage({ onNavigate }) {
 
        {/* Footer */}
        <footer className="text-center p-4 text-xs text-slate-500">
-        © {new Date().getFullYear()} NWI Visas Inc. All Rights Reserved.
+        © {new Date().getFullYear()} Visa Flow Inc. All Rights Reserved.
       </footer>
     </div>
   );

@@ -7,6 +7,12 @@ export const User = {
   async login(email = null, password = null) {
     console.log('Login attempt - Supabase configured:', isSupabaseConfigured());
 
+    // In development mode, always use mock authentication for easier testing
+    if (import.meta.env.DEV) {
+      console.log('Development mode - using mock authentication...');
+      return this.mockLogin();
+    }
+
     if (isSupabaseConfigured()) {
       try {
         if (email && password) {
@@ -98,38 +104,79 @@ export const User = {
         created_at: new Date().toISOString()
       };
 
-      localStorage.setItem('nwi_user', JSON.stringify(user));
+      localStorage.setItem('visa_flow_user', JSON.stringify(user));
       return { user };
     }
   },
 
-  async mockLogin() {
+  async mockLogin(role = 'associate') {
     // Fallback to mock authentication
     await delay(1000); // Simulate login delay
 
-    // Mock successful login
-    const user = {
-      id: 1,
-      name: 'John Associate',
-      full_name: 'John Associate',
-      email: 'john@nwivisas.com',
-      role: 'associate',
-      created_at: '2024-01-01',
-      last_login: new Date().toISOString()
+    // Create different mock users based on role
+    const users = {
+      associate: {
+        id: 1,
+        name: 'John Associate',
+        full_name: 'John Associate',
+        email: 'john@visaflow.com',
+        role: 'associate',
+        created_at: '2024-01-01',
+        last_login: new Date().toISOString()
+      },
+      admin: {
+        id: 2,
+        name: 'Admin User',
+        full_name: 'Admin User',
+        email: 'admin@visaflow.com',
+        role: 'admin',
+        created_at: '2024-01-01',
+        last_login: new Date().toISOString()
+      }
     };
 
+    const user = users[role] || users.associate;
+
     // Store user in localStorage for persistence
-    localStorage.setItem('nwi_user', JSON.stringify(user));
+    localStorage.setItem('visa_flow_user', JSON.stringify(user));
 
     console.log('Mock login successful:', user);
 
     // Trigger auth state change callback if it exists
     if (this._authCallback) {
-      this._authCallback('SIGNED_IN', { user });
+      console.log('🔄 Triggering auth state change: SIGNED_IN');
+      // Use setTimeout to ensure the callback is called after the current execution
+      setTimeout(() => {
+        this._authCallback('SIGNED_IN', { user });
+      }, 0);
+    } else {
+      console.log('⚠️ No auth callback registered - checking global callback');
+      // Check if there's a global callback stored
+      if (window._visaFlowAuthCallback) {
+        console.log('🔄 Using global auth callback');
+        setTimeout(() => {
+          window._visaFlowAuthCallback('SIGNED_IN', { user });
+        }, 0);
+      }
     }
 
     // Return user data without reloading the page
     return { user };
+  },
+
+  // Development helper method to switch user roles
+  async switchToAdmin() {
+    if (import.meta.env.DEV) {
+      console.log('Switching to admin user...');
+      return this.mockLogin('admin');
+    }
+  },
+
+  async switchToAssociate() {
+    if (import.meta.env.DEV) {
+      console.log('Switching to associate user...');
+      return this.mockLogin('associate');
+    }
   },
 
   async logout() {
@@ -143,37 +190,73 @@ export const User = {
       } catch (error) {
         console.error('Logout failed:', error)
         // Fallback to clearing localStorage
-        localStorage.removeItem('nwi_user');
+        localStorage.removeItem('visa_flow_user');
       }
     } else {
       // Mock logout
       await delay(300);
-      localStorage.removeItem('nwi_user');
+      localStorage.removeItem('visa_flow_user');
+
+      // Trigger auth state change callback if it exists
+      if (this._authCallback) {
+        console.log('🔄 Triggering auth state change: SIGNED_OUT');
+        this._authCallback('SIGNED_OUT', null);
+      }
     }
   },
 
   getCurrentUser() {
+    // In development mode, always use localStorage
+    if (import.meta.env.DEV) {
+      const userStr = localStorage.getItem('visa_flow_user');
+      return userStr ? JSON.parse(userStr) : null;
+    }
+
     if (isSupabaseConfigured()) {
-      // Get current user from Supabase session
-      const { data: { user } } = supabase.auth.getUser()
-      return user
+      try {
+        // Get current user from Supabase session (synchronous)
+        const { data: { session } } = supabase.auth.getSession()
+        return session?.user || null;
+      } catch (error) {
+        console.log('Error getting Supabase session:', error);
+        // Fallback to localStorage
+        const userStr = localStorage.getItem('visa_flow_user');
+        return userStr ? JSON.parse(userStr) : null;
+      }
     } else {
       // Fallback to localStorage
-      const userStr = localStorage.getItem('nwi_user');
+      const userStr = localStorage.getItem('visa_flow_user');
       return userStr ? JSON.parse(userStr) : null;
     }
   },
 
   isAuthenticated() {
+    // In development mode, always check localStorage
+    if (import.meta.env.DEV) {
+      return this.getCurrentUser() !== null;
+    }
+
     if (isSupabaseConfigured()) {
-      const { data: { session } } = supabase.auth.getSession()
-      return !!session
+      try {
+        const { data: { session } } = supabase.auth.getSession()
+        return !!session
+      } catch (error) {
+        console.log('Error checking Supabase session:', error);
+        return this.getCurrentUser() !== null;
+      }
     } else {
       return this.getCurrentUser() !== null;
     }
   },
 
   async me() {
+    // In development mode, always use localStorage
+    if (import.meta.env.DEV) {
+      await delay(500); // Simulate API call
+      const user = this.getCurrentUser();
+      return user; // Return null if no user, don't throw error
+    }
+
     if (isSupabaseConfigured()) {
       try {
         const { data: { user }, error } = await supabase.auth.getUser()
@@ -219,7 +302,7 @@ export const User = {
       };
 
       // Update localStorage
-      localStorage.setItem('nwi_user', JSON.stringify(updatedUser));
+      localStorage.setItem('visa_flow_user', JSON.stringify(updatedUser));
 
       return updatedUser;
     }
@@ -230,13 +313,22 @@ export const User = {
     if (isSupabaseConfigured()) {
       return supabase.auth.onAuthStateChange(callback)
     } else {
-      // Store callback for mock implementation
+      // Store callback for mock implementation (both locally and globally)
       this._authCallback = callback;
+      window._visaFlowAuthCallback = callback;
+      console.log('📡 Auth state change listener registered (local + global)');
 
       // Mock implementation - call callback immediately with current state
       const user = this.getCurrentUser()
-      callback(user ? 'SIGNED_IN' : 'SIGNED_OUT', user ? { user } : null)
-      return { data: { subscription: { unsubscribe: () => { this._authCallback = null; } } } }
+      const event = user ? 'SIGNED_IN' : 'INITIAL_SESSION';
+      console.log(`📡 Initial auth state: ${event}`, user ? { user } : null);
+      callback(event, user ? { user } : null)
+
+      return { data: { subscription: { unsubscribe: () => {
+        console.log('📡 Auth state change listener unsubscribed');
+        this._authCallback = null;
+        window._visaFlowAuthCallback = null;
+      } } } }
     }
   }
 };

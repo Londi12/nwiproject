@@ -2,7 +2,7 @@
 
 ## 🔍 Current Situation
 
-Your NWI Visas CRM is currently showing **demo/mock data** because Supabase is not configured. Here's why:
+Your Visa Flow CRM is currently showing **demo/mock data** because Supabase is not configured. Here's why:
 
 ### Environment Variables Not Set
 ```env
@@ -20,7 +20,7 @@ The app automatically detects invalid Supabase config and uses demo data instead
 - Go to [supabase.com](https://supabase.com)
 - Sign up/login
 - Click "New Project"
-- Name: `nwi-visas-crm`
+- Name: `visa-flow-crm`
 - Set password, choose region
 - Wait for project creation
 
@@ -63,7 +63,7 @@ VITE_SUPABASE_ANON_KEY=your-actual-anon-key-here
 ### Development Mode Diagnostic:
 The app automatically runs a diagnostic in development mode. Check your browser console for:
 ```
-🔍 Running NWI Visas CRM Configuration Diagnostic...
+🔍 Running Visa Flow CRM Configuration Diagnostic...
 ✅ Configuration Status:
   Configured: ✅
   Connected: ✅
@@ -119,7 +119,7 @@ After setup, try:
 
 ## 🎉 That's It!
 
-Once configured, your NWI Visas CRM will be using real Supabase data instead of demo data. The transition is automatic - no code changes needed!
+Once configured, your Visa Flow CRM will be using real Supabase data instead of demo data. The transition is automatic - no code changes needed!
 
 ---
 

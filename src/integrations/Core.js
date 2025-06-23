@@ -1,4 +1,4 @@
-// Core Integration Functions for NWI Visas Platform
+// Core Integration Functions for Visa Flow Platform
 // Real text extraction using PDF.js, mammoth.js, and Tesseract.js
 
 import { extractPDFText, isPDFFile } from '../utils/pdfParser.js';

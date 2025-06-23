@@ -638,4 +638,6 @@ export const Document = {
   }
 };
 
-
+export { User } from './User.js';
+export { KnowledgeBase } from './KnowledgeBase.js';
+export { OccupationKnowledge } from './OccupationKnowledge.js';

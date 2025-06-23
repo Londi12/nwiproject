@@ -66,7 +66,7 @@ export default function ApplicationDetailsDialog({ application, open, onOpenChan
 
   const getDocumentStatusColor = (status) => {
     const colors = {
-      'Required': 'bg-red-100 text-red-800',
+      'Required': 'bg-slate-100 text-slate-800',
       'Requested': 'bg-orange-100 text-orange-800',
       'Received': 'bg-blue-100 text-blue-800',
       'Under Review': 'bg-yellow-100 text-yellow-800',
@@ -97,7 +97,7 @@ export default function ApplicationDetailsDialog({ application, open, onOpenChan
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-600" />
-            Application Details - {application.case_number}
+            Application Details - {application.application_number}
           </DialogTitle>
         </DialogHeader>
 
@@ -115,8 +115,8 @@ export default function ApplicationDetailsDialog({ application, open, onOpenChan
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-xl font-semibold text-slate-900">{application.client_name}</h3>
-                  <p className="text-slate-600">{application.visa_type} - {application.target_country}</p>
-                  <p className="text-sm text-slate-500">Case: {application.case_number}</p>
+                  <p className="text-slate-600">{application.visa_type} - {application.country}</p>
+                  <p className="text-sm text-slate-500">Case: {application.application_number}</p>
                 </div>
                 <Badge className={`${getStatusColor(application.status)} border`}>
                   {getStatusIcon(application.status)}
@@ -146,7 +146,7 @@ export default function ApplicationDetailsDialog({ application, open, onOpenChan
                   <User className="w-4 h-4 text-slate-500" />
                   <div>
                     <p className="font-medium">Consultant</p>
-                    <p className="text-slate-600">{application.consultant || 'Unassigned'}</p>
+                    <p className="text-slate-600">{application.assigned_consultant || 'Unassigned'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ export default function ApplicationDetailsDialog({ application, open, onOpenChan
                   <DollarSign className="w-4 h-4 text-slate-500" />
                   <div>
                     <p className="font-medium">Fee Status</p>
-                    <p className="text-slate-600">{application.payment_status || 'Pending'}</p>
+                    <p className="text-slate-600">{application.getPaymentStatus() || 'Pending'}</p>
                   </div>
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function ApplicationDetailsDialog({ application, open, onOpenChan
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-slate-500" />
-                    <span>{application.client_location || 'Not provided'}</span>
+                    <span>{application.country || 'Not provided'}</span>
                   </div>
                 </div>
               </div>
@@ -199,13 +199,13 @@ export default function ApplicationDetailsDialog({ application, open, onOpenChan
                     <span className="font-medium">Visa Type:</span> {application.visa_type}
                   </div>
                   <div>
-                    <span className="font-medium">Target Country:</span> {application.target_country}
+                    <span className="font-medium">Target Country:</span> {application.country}
                   </div>
                   <div>
                     <span className="font-medium">CV Status:</span> {application.cv_status || 'Not uploaded'}
                   </div>
                   <div>
-                    <span className="font-medium">Lead Source:</span> {application.lead_source || 'Direct'}
+                    <span className="font-medium">Lead Source:</span> {application.lead_id ? 'From Lead' : 'Direct'}
                   </div>
                 </div>
               </div>

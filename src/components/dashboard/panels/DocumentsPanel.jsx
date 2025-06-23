@@ -83,7 +83,7 @@ export default function DocumentsPanel() {
 
   const getStatusColor = (status) => {
     const colors = {
-      'Required': 'bg-red-100 text-red-800',
+      'Required': 'bg-slate-100 text-slate-800',
       'Requested': 'bg-orange-100 text-orange-800',
       'Received': 'bg-blue-100 text-blue-800',
       'Under Review': 'bg-yellow-100 text-yellow-800',
@@ -97,7 +97,7 @@ export default function DocumentsPanel() {
 
   const getPriorityColor = (priority) => {
     const colors = {
-      'High': 'bg-red-100 text-red-800',
+      'High': 'bg-slate-100 text-slate-800',
       'Medium': 'bg-orange-100 text-orange-800',
       'Low': 'bg-blue-100 text-blue-800'
     };

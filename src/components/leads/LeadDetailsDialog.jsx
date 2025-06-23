@@ -64,7 +64,7 @@ export default function LeadDetailsDialog({ lead, open, onOpenChange, onSuccess 
       'Needs Follow-Up': 'bg-orange-50 text-orange-700 border-orange-200',
       'Qualified': 'bg-purple-50 text-purple-700 border-purple-200',
       'Converted': 'bg-green-50 text-green-700 border-green-200',
-      'Lost': 'bg-red-50 text-red-700 border-red-200'
+      'Lost': 'bg-slate-50 text-slate-700 border-slate-200'
     };
     return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
   };

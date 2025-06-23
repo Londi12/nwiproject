@@ -143,16 +143,34 @@ export class Application {
     try {
       const queryParams = new URLSearchParams(filters);
       const response = await fetch(`/api/applications?${queryParams}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch applications');
       }
-      
+
       const data = await response.json();
       return data.map(appData => new Application(appData));
     } catch (error) {
       console.error('Error fetching applications:', error);
       // Return mock data for development
+      return Application.getMockData();
+    }
+  }
+
+  static async list(sortBy = '-created_date') {
+    try {
+      // For now, just call getAll and sort locally
+      const applications = await this.getAll();
+
+      // Simple sorting logic
+      if (sortBy.startsWith('-')) {
+        const field = sortBy.substring(1);
+        return applications.sort((a, b) => new Date(b[field]) - new Date(a[field]));
+      } else {
+        return applications.sort((a, b) => new Date(a[sortBy]) - new Date(b[sortBy]));
+      }
+    } catch (error) {
+      console.error('Error listing applications:', error);
       return Application.getMockData();
     }
   }

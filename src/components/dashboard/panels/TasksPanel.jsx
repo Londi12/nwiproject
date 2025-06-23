@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Clock, AlertTriangle } from "lucide-react";
-import { isToday, isPast, format } from "date-fns";
+import { Plus, Clock, AlertTriangle, Calendar as CalendarIcon } from "lucide-react";
+import { isToday, isPast, format, isSameDay } from "date-fns";
 import AddTaskDialog from "../../tasks/AddTaskDialog";
+import TaskCalendar from "../../tasks/TaskCalendar";
+import DayTasksList from "../../tasks/DayTasksList";
 
 export default function TasksPanel() {
   const [tasks, setTasks] = useState([]);
@@ -16,6 +18,8 @@ export default function TasksPanel() {
   const [newTaskType, setNewTaskType] = useState("Follow-up");
   const [loading, setLoading] = useState(true);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showCalendarView, setShowCalendarView] = useState(false);
 
   useEffect(() => {
     loadTasks();
@@ -66,8 +70,8 @@ export default function TasksPanel() {
     const colors = {
       'Low': 'bg-blue-100 text-blue-800',
       'Medium': 'bg-orange-100 text-orange-800',
-      'High': 'bg-red-100 text-red-800',
-      'Urgent': 'bg-red-200 text-red-900'
+      'High': 'bg-slate-100 text-slate-800',
+      'Urgent': 'bg-slate-200 text-slate-900'
     };
     return colors[priority] || 'bg-gray-100 text-gray-800';
   };
@@ -90,14 +94,49 @@ export default function TasksPanel() {
     task.due_date && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date)) && task.status !== 'Completed'
   );
 
+  const selectedDateTasks = tasks.filter(task =>
+    task.due_date && isSameDay(new Date(task.due_date), selectedDate)
+  );
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setShowCalendarView(true);
+  };
+
+  const toggleCalendarView = () => {
+    setShowCalendarView(!showCalendarView);
+    if (!showCalendarView) {
+      setSelectedDate(new Date()); // Reset to today when opening calendar
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm rounded-2xl bg-white">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Clock className="w-5 h-5" />
-              Today's Tasks ({todayTasks.length})
+            <CardTitle className="flex items-center justify-between text-lg">
+              <div className="flex items-center gap-2">
+                {showCalendarView ? (
+                  <>
+                    <CalendarIcon className="w-5 h-5" />
+                    Task Calendar
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-5 h-5" />
+                    Today's Tasks ({todayTasks.length})
+                  </>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleCalendarView}
+                className="h-8 px-2 text-xs"
+              >
+                {showCalendarView ? 'List View' : 'Calendar'}
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -105,6 +144,22 @@ export default function TasksPanel() {
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="h-12 bg-slate-200 rounded animate-pulse" />
               ))
+            ) : showCalendarView ? (
+              <div className="space-y-4">
+                <TaskCalendar
+                  selectedDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  tasks={tasks}
+                  className="mb-4"
+                />
+                {selectedDateTasks.length > 0 && (
+                  <DayTasksList
+                    selectedDate={selectedDate}
+                    tasks={tasks}
+                    onToggleTask={toggleTaskStatus}
+                  />
+                )}
+              </div>
             ) : todayTasks.length > 0 ? (
               todayTasks.map((task) => (
                 <div key={task.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
@@ -122,7 +177,19 @@ export default function TasksPanel() {
                 </div>
               ))
             ) : (
-              <p className="text-slate-500 text-center py-4">No tasks due today</p>
+              <div className="text-center py-6">
+                <CalendarIcon className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                <p className="text-slate-500 mb-3">No tasks due today</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleCalendarView}
+                  className="text-xs"
+                >
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  View Calendar
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
