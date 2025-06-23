@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CVPreview } from "./CVPreview";
-import { Upload, Eye, User, Briefcase, GraduationCap, Award, Download } from "lucide-react";
+import { parseTextToCV } from "../../utils/cvParser";
+import { Upload, Eye, User, Briefcase, GraduationCap, Award, Download, FileText, AlertCircle } from "lucide-react";
 
 export default function SimpleCVBuilder() {
   const [activeTab, setActiveTab] = useState('personal');
@@ -25,6 +26,11 @@ export default function SimpleCVBuilder() {
     skills: []
   });
   const [selectedTemplate, setSelectedTemplate] = useState('professional');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+  const [parseResult, setParseResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   const updatePersonalInfo = (field, value) => {
     setCvData(prev => ({
@@ -101,6 +107,51 @@ export default function SimpleCVBuilder() {
     }));
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError('');
+    setUploadSuccess('');
+
+    try {
+      // Read file as text for now (simplified version)
+      const text = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file);
+      });
+
+      // Parse the CV text
+      const result = parseTextToCV(text);
+      setParseResult(result); // Store for debugging
+
+      if (result.success && result.data) {
+        // Update CV data with parsed information
+        setCvData(result.data);
+        setUploadSuccess(`CV parsed successfully! Confidence: ${result.confidence}%`);
+
+        // Auto-advance to summary tab if personal info was filled
+        if (result.data.personalInfo.fullName) {
+          setActiveTab('summary');
+        }
+      } else {
+        setUploadError(result.error || 'Failed to parse CV');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setUploadError('Error reading file. Please try again.');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const getCompletionPercentage = () => {
     let completed = 0;
     let total = 8; // Total required fields
@@ -164,12 +215,89 @@ export default function SimpleCVBuilder() {
                   <p className="text-sm text-gray-600 mb-2">
                     Upload your CV to auto-fill the fields. Supported formats: PDF, DOCX, TXT.
                   </p>
-                  <Button variant="outline" size="sm">
-                    Choose File
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.docx,.txt"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <>
+                        <FileText className="w-4 h-4 mr-1 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-1" />
+                        Choose File
+                      </>
+                    )}
                   </Button>
+
+                  {/* Upload Status Messages */}
+                  {uploadError && (
+                    <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-md">
+                      <div className="flex items-center gap-2 text-red-700">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-sm">{uploadError}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {uploadSuccess && (
+                    <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-md">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <FileText className="w-4 h-4" />
+                        <span className="text-sm">{uploadSuccess}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Debug Panel (Development Only) */}
+            {parseResult && import.meta.env.DEV && (
+              <Card className="mb-6 border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle className="text-sm text-blue-800">
+                    🔧 Parser Debug Info (Dev Only)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xs space-y-2">
+                    <div>
+                      <strong>Success:</strong> {parseResult.success ? '✅' : '❌'}
+                    </div>
+                    <div>
+                      <strong>Confidence:</strong> {parseResult.confidence}%
+                    </div>
+                    {parseResult.error && (
+                      <div className="text-red-600">
+                        <strong>Error:</strong> {parseResult.error}
+                      </div>
+                    )}
+                    {parseResult.data && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-blue-700 hover:text-blue-900">
+                          View Parsed Data
+                        </summary>
+                        <pre className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-32">
+                          {JSON.stringify(parseResult.data, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Form Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>

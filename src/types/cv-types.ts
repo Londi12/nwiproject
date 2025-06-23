@@ -15,6 +15,18 @@ export interface WorkExperience {
   description: string;
 }
 
+// Alias for compatibility with enhanced parser
+export interface Experience extends WorkExperience {}
+
+export interface Project {
+  title: string;
+  description: string;
+  technologies?: string[];
+  url?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export interface Education {
   degree: string;
   institution: string;
@@ -32,7 +44,8 @@ export interface CVData {
   summary: string;
   experience: WorkExperience[];
   education: Education[];
-  skills: string[] | Skill[];
+  skills: string[] | Skill[] | string;
+  projects?: Project[];
 }
 
 export type TemplateType =
