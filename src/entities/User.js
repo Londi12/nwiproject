@@ -4,39 +4,102 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const User = {
-  async login() {
+  async login(email = null, password = null) {
     console.log('Login attempt - Supabase configured:', isSupabaseConfigured());
 
     if (isSupabaseConfigured()) {
       try {
-        console.log('Attempting Supabase OAuth login...');
-        // Use Supabase authentication with Google OAuth
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            }
+        if (email && password) {
+          // Email/password login
+          console.log('Attempting Supabase email/password login...');
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+          });
+
+          if (error) {
+            console.error('Supabase email login error:', error);
+            throw error; // Don't fall back for email login errors
           }
-        })
 
-        if (error) {
-          console.error('Supabase login error:', error)
-          // Fall back to mock login instead of throwing error
-          console.log('Falling back to mock authentication...');
-          return this.mockLogin();
+          return data;
+        } else {
+          // Try Google OAuth (if enabled)
+          console.log('Attempting Supabase OAuth login...');
+          const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: window.location.origin,
+              queryParams: {
+                access_type: 'offline',
+                prompt: 'consent',
+              }
+            }
+          });
+
+          if (error) {
+            console.error('Supabase OAuth error:', error);
+            // Fall back to mock login for OAuth errors
+            console.log('OAuth not configured, falling back to mock authentication...');
+            return this.mockLogin();
+          }
+
+          return data;
         }
-
-        return data
       } catch (error) {
-        console.error('Supabase login failed, falling back to mock:', error)
-        return this.mockLogin();
+        console.error('Supabase login failed:', error);
+        if (email && password) {
+          throw error; // Re-throw email login errors
+        } else {
+          return this.mockLogin(); // Fall back for OAuth errors
+        }
       }
     } else {
       console.log('Using mock authentication...');
       return this.mockLogin();
+    }
+  },
+
+  async signUp(email, password, fullName = '') {
+    console.log('Sign up attempt - Supabase configured:', isSupabaseConfigured());
+
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              full_name: fullName,
+            }
+          }
+        });
+
+        if (error) {
+          console.error('Supabase signup error:', error);
+          throw error;
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Supabase signup failed:', error);
+        throw error;
+      }
+    } else {
+      // Mock signup
+      console.log('Using mock signup...');
+      await delay(1000);
+
+      const user = {
+        id: Date.now(),
+        email: email,
+        full_name: fullName,
+        role: 'associate',
+        created_at: new Date().toISOString()
+      };
+
+      localStorage.setItem('nwi_user', JSON.stringify(user));
+      return { user };
     }
   },
 
