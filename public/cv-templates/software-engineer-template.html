@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Engineer CV Template</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Arial', sans-serif; 
+            line-height: 1.4; 
+            color: #333; 
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 20mm;
+        }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #2563eb; padding-bottom: 15px; }
+        .name { font-size: 28px; font-weight: bold; color: #1e40af; margin-bottom: 5px; }
+        .title { font-size: 16px; color: #64748b; margin-bottom: 10px; }
+        .contact { font-size: 12px; color: #475569; }
+        .contact span { margin: 0 10px; }
+        .section { margin-bottom: 20px; }
+        .section-title { 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: #1e40af; 
+            text-transform: uppercase; 
+            border-bottom: 1px solid #e2e8f0; 
+            padding-bottom: 5px; 
+            margin-bottom: 10px; 
+        }
+        .experience-item, .education-item { margin-bottom: 15px; }
+        .job-title { font-weight: bold; color: #1e293b; }
+        .company { color: #2563eb; font-weight: 500; }
+        .date { color: #64748b; font-size: 12px; float: right; }
+        .location { color: #64748b; font-size: 12px; }
+        .description { margin-top: 5px; font-size: 12px; }
+        .description ul { margin-left: 15px; }
+        .description li { margin-bottom: 3px; }
+        .skills-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .skill-category { background: #f8fafc; padding: 10px; border-radius: 5px; }
+        .skill-category h4 { color: #1e40af; font-size: 12px; margin-bottom: 5px; }
+        .skill-category ul { list-style: none; font-size: 11px; }
+        .skill-category li { margin-bottom: 2px; }
+        .summary { font-size: 12px; text-align: justify; line-height: 1.5; }
+        .two-column { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .clearfix::after { content: ""; display: table; clear: both; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="name">ALEX CHEN</div>
+        <div class="title">Senior Software Engineer</div>
+        <div class="contact">
+            <span>📧 alex.chen@email.com</span>
+            <span>📱 +1 (647) 555-0123</span>
+            <span>📍 Toronto, ON, Canada</span>
+            <span>💼 linkedin.com/in/alexchen</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Professional Summary</div>
+        <div class="summary">
+            Experienced Senior Software Engineer with 8+ years developing scalable web applications and microservices. 
+            Proven track record of leading development teams and delivering high-impact solutions using modern technologies. 
+            Strong expertise in full-stack development, cloud architecture, and agile methodologies. Seeking to contribute 
+            technical leadership skills to Canadian tech industry through Express Entry immigration program.
+        </div>
+    </div>
+
+    <div class="two-column">
+        <div>
+            <div class="section">
+                <div class="section-title">Work Experience</div>
+                
+                <div class="experience-item clearfix">
+                    <div class="job-title">Senior Software Engineer</div>
+                    <div class="date">Jan 2020 - Present</div>
+                    <div class="company">TechCorp Solutions</div>
+                    <div class="location">San Francisco, CA, USA</div>
+                    <div class="description">
+                        <ul>
+                            <li>Led development of microservices architecture serving 2M+ daily users</li>
+                            <li>Reduced system latency by 40% through performance optimization</li>
+                            <li>Mentored team of 5 junior developers and conducted code reviews</li>
+                            <li>Implemented CI/CD pipelines reducing deployment time by 60%</li>
+                            <li>Collaborated with product managers to define technical requirements</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="experience-item clearfix">
+                    <div class="job-title">Software Engineer</div>
+                    <div class="date">Jun 2018 - Dec 2019</div>
+                    <div class="company">InnovateTech Inc.</div>
+                    <div class="location">Seattle, WA, USA</div>
+                    <div class="description">
+                        <ul>
+                            <li>Developed RESTful APIs and web applications using React and Node.js</li>
+                            <li>Increased application performance by 35% through database optimization</li>
+                            <li>Participated in agile development processes and sprint planning</li>
+                            <li>Integrated third-party services and payment processing systems</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="experience-item clearfix">
+                    <div class="job-title">Junior Software Developer</div>
+                    <div class="date">Aug 2016 - May 2018</div>
+                    <div class="company">StartupXYZ</div>
+                    <div class="location">Austin, TX, USA</div>
+                    <div class="description">
+                        <ul>
+                            <li>Built responsive web applications using JavaScript, HTML5, and CSS3</li>
+                            <li>Collaborated with UX/UI designers to implement user interfaces</li>
+                            <li>Participated in code reviews and maintained coding standards</li>
+                            <li>Debugged and resolved software defects in production environment</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Education</div>
+                
+                <div class="education-item clearfix">
+                    <div class="job-title">Master of Science in Computer Science</div>
+                    <div class="date">2014 - 2016</div>
+                    <div class="company">University of California, Berkeley</div>
+                    <div class="location">Berkeley, CA, USA</div>
+                    <div class="description">
+                        <ul>
+                            <li>GPA: 3.8/4.0 • Specialization: Software Engineering</li>
+                            <li>Relevant Coursework: Algorithms, Database Systems, Software Architecture</li>
+                            <li>Thesis: "Scalable Microservices Architecture for E-commerce Platforms"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="education-item clearfix">
+                    <div class="job-title">Bachelor of Engineering in Computer Science</div>
+                    <div class="date">2010 - 2014</div>
+                    <div class="company">Beijing University of Technology</div>
+                    <div class="location">Beijing, China</div>
+                    <div class="description">
+                        <ul>
+                            <li>First Class Honours • Dean's List (2012, 2013, 2014)</li>
+                            <li>Relevant Coursework: Data Structures, Operating Systems, Computer Networks</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section">
+                <div class="section-title">Technical Skills</div>
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h4>Programming</h4>
+                        <ul>
+                            <li>JavaScript (ES6+)</li>
+                            <li>Python</li>
+                            <li>Java</li>
+                            <li>TypeScript</li>
+                            <li>Go</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h4>Frameworks</h4>
+                        <ul>
+                            <li>React.js</li>
+                            <li>Node.js</li>
+                            <li>Express.js</li>
+                            <li>Django</li>
+                            <li>Spring Boot</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h4>Databases</h4>
+                        <ul>
+                            <li>PostgreSQL</li>
+                            <li>MongoDB</li>
+                            <li>Redis</li>
+                            <li>MySQL</li>
+                            <li>Elasticsearch</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h4>Cloud & DevOps</h4>
+                        <ul>
+                            <li>AWS (EC2, S3, RDS)</li>
+                            <li>Docker</li>
+                            <li>Kubernetes</li>
+                            <li>Jenkins</li>
+                            <li>Terraform</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h4>Tools</h4>
+                        <ul>
+                            <li>Git/GitHub</li>
+                            <li>JIRA</li>
+                            <li>Postman</li>
+                            <li>VS Code</li>
+                            <li>Slack</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Certifications</div>
+                <div class="description">
+                    <ul>
+                        <li>AWS Certified Solutions Architect (2022)</li>
+                        <li>Certified Kubernetes Administrator (2021)</li>
+                        <li>Google Cloud Professional Developer (2020)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Languages</div>
+                <div class="description">
+                    <ul>
+                        <li>English: Fluent (IELTS 8.0)</li>
+                        <li>Mandarin: Native</li>
+                        <li>French: Conversational</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Key Achievements</div>
+                <div class="description">
+                    <ul>
+                        <li>Led migration to microservices, reducing costs by $200K annually</li>
+                        <li>Developed real-time analytics dashboard used by 500+ internal users</li>
+                        <li>Published 3 technical articles on software architecture</li>
+                        <li>Speaker at 2 international tech conferences</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
