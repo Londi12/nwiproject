@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CVPreview } from "./CVPreview";
 import { parseTextToCV } from "../../utils/cvParser";
+import { downloadCVAsPDF, generateA4PDF } from "../../utils/pdfGenerator";
 import { Upload, Eye, User, Briefcase, GraduationCap, Award, Download, FileText, AlertCircle } from "lucide-react";
 
 export default function SimpleCVBuilder() {
@@ -30,7 +31,10 @@ export default function SimpleCVBuilder() {
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
   const [parseResult, setParseResult] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
   const fileInputRef = useRef(null);
+  const cvPreviewRef = useRef(null);
 
   const updatePersonalInfo = (field, value) => {
     setCvData(prev => ({
@@ -184,6 +188,32 @@ export default function SimpleCVBuilder() {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!cvPreviewRef.current) {
+      setDownloadError('CV preview not found. Please try again.');
+      return;
+    }
+
+    setIsDownloading(true);
+    setDownloadError('');
+
+    try {
+      // Find the actual CV preview element within the ref
+      const cvElement = cvPreviewRef.current.querySelector('.cv-preview-content') || cvPreviewRef.current;
+
+      const result = await generateA4PDF(cvElement, `${cvData.personalInfo.fullName || 'CV'}_CV.pdf`);
+
+      if (!result.success) {
+        setDownloadError(result.error || 'Failed to generate PDF');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      setDownloadError('Error generating PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -562,9 +592,22 @@ export default function SimpleCVBuilder() {
                   <Eye className="w-4 h-4 mr-1" />
                   Full Preview
                 </Button>
-                <Button size="sm">
-                  <Download className="w-4 h-4 mr-1" />
-                  Download PDF
+                <Button
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading || !cvData.personalInfo.fullName}
+                >
+                  {isDownloading ? (
+                    <>
+                      <FileText className="w-4 h-4 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-1" />
+                      Download PDF
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -588,12 +631,25 @@ export default function SimpleCVBuilder() {
               </div>
             </div>
 
+            {/* Download Error Message */}
+            {downloadError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <div className="flex items-center gap-2 text-red-700">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">{downloadError}</span>
+                </div>
+              </div>
+            )}
+
             {/* CV Preview */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div
+              ref={cvPreviewRef}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+            >
               <CVPreview
                 template={selectedTemplate}
                 userData={cvData}
-                className="w-full"
+                className="w-full cv-preview-content"
               />
             </div>
           </div>

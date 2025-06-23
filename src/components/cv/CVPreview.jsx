@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function CVPreview({ template, className = "", userData }) {
+export function CVPreview({ template, className = "", userData, isPrintMode = false }) {
   // Parse skills into an array if provided
   const skillsArray = userData?.skills
     ? Array.isArray(userData.skills)
@@ -11,11 +11,27 @@ export function CVPreview({ template, className = "", userData }) {
           .filter(Boolean)
     : ["Excel", "SQL", "Python", "Tableau", "Financial Modeling", "Data Analysis"]
 
+  // A4 dimensions and styling for PDF generation
+  const a4Styles = isPrintMode ? {
+    width: '210mm',
+    minHeight: '297mm',
+    padding: '20mm',
+    margin: '0',
+    backgroundColor: 'white',
+    fontSize: '12px',
+    lineHeight: '1.4',
+    fontFamily: 'Arial, sans-serif'
+  } : {};
+
+  const containerClass = isPrintMode
+    ? `bg-white ${className}`
+    : `bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden ${className}`;
+
   const getTemplateContent = () => {
     switch (template) {
       case "professional":
         return (
-          <div className={`bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden ${className}`}>
+          <div className={containerClass} style={isPrintMode ? a4Styles : {}}>
             <div className="p-6 space-y-4">
               {/* Header */}
               <div className="border-b border-gray-200 pb-4">
