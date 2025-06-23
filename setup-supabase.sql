@@ -1,6 +1,21 @@
 -- NWI Visas CRM Database Schema
 -- Run this in your Supabase SQL Editor
 
+-- 0. User Profiles Table (extends Supabase auth.users for Associates & Admin)
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  full_name VARCHAR(255),
+  role VARCHAR(50) DEFAULT 'associate' CHECK (role IN ('associate', 'admin', 'manager')),
+  department VARCHAR(100),
+  phone VARCHAR(50),
+  avatar_url VARCHAR(500),
+  is_active BOOLEAN DEFAULT true,
+  last_login TIMESTAMP,
+  permissions JSONB DEFAULT '{"leads": true, "applications": true, "tasks": true, "calls": true, "documents": true}',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- 1. Leads Table
 CREATE TABLE IF NOT EXISTS leads (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -144,11 +159,23 @@ CREATE TABLE IF NOT EXISTS documents (
 );
 
 -- Enable Row Level Security
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE calls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for user profiles (Associates & Admin)
+CREATE POLICY "Users can view all profiles" ON user_profiles FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Users can update own profile" ON user_profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Enable insert for authenticated users" ON user_profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Admins can update any profile" ON user_profiles FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM user_profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  )
+);
 
 -- Create policies for public access (adjust as needed for your security requirements)
 CREATE POLICY "Enable read access for all users" ON leads FOR SELECT USING (true);
@@ -177,6 +204,10 @@ CREATE POLICY "Enable update for all users" ON documents FOR UPDATE USING (true)
 CREATE POLICY "Enable delete for all users" ON documents FOR DELETE USING (true);
 
 -- Create indexes for better performance
+CREATE INDEX idx_user_profiles_role ON user_profiles(role);
+CREATE INDEX idx_user_profiles_is_active ON user_profiles(is_active);
+CREATE INDEX idx_user_profiles_department ON user_profiles(department);
+
 CREATE INDEX idx_leads_status ON leads(status);
 CREATE INDEX idx_leads_source ON leads(source);
 CREATE INDEX idx_leads_created_at ON leads(created_at);
@@ -196,3 +227,39 @@ CREATE INDEX idx_calls_consultant ON calls(consultant);
 CREATE INDEX idx_documents_status ON documents(status);
 CREATE INDEX idx_documents_application_id ON documents(application_id);
 CREATE INDEX idx_documents_document_type ON documents(document_type);
+
+-- Function to automatically create user profile when user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.user_profiles (id, full_name, role)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+    'associate'  -- Default role for new users
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to automatically create profile for new users
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Function to handle updated_at timestamps
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add updated_at triggers to all tables
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON user_profiles FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON leads FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON applications FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON tasks FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON calls FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
