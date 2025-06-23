@@ -116,16 +116,51 @@ export default function SimpleCVBuilder() {
     setUploadSuccess('');
 
     try {
-      // Read file as text for now (simplified version)
-      const text = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsText(file);
-      });
+      // For now, let's use a simplified text extraction approach
+      // until we can properly integrate the enhanced parser
+      let text = '';
 
-      // Parse the CV text
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        // Handle TXT files
+        text = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name.endsWith('.docx')) {
+        // Handle DOCX files with mammoth
+        const arrayBuffer = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(file);
+        });
+
+        // Use mammoth to extract text from DOCX
+        const mammoth = await import('mammoth');
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        text = result.value;
+      } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        // For PDF files, show a message that PDF parsing is coming soon
+        setUploadError('PDF parsing is currently being enhanced. Please use TXT or DOCX files for now.');
+        return;
+      } else {
+        setUploadError('Unsupported file type. Please use TXT or DOCX files.');
+        return;
+      }
+
+      if (!text || text.trim().length === 0) {
+        setUploadError('No text could be extracted from the file.');
+        return;
+      }
+
+      // Parse the CV text using the existing parser
+      console.log('Extracted text length:', text.length);
+      console.log('First 200 characters:', text.substring(0, 200));
+
       const result = parseTextToCV(text);
+      console.log('Parse result:', result);
       setParseResult(result); // Store for debugging
 
       if (result.success && result.data) {
@@ -142,7 +177,7 @@ export default function SimpleCVBuilder() {
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      setUploadError('Error reading file. Please try again.');
+      setUploadError(`Error processing file: ${error.message || 'Please try again.'}`);
     } finally {
       setIsUploading(false);
       // Reset file input
@@ -213,12 +248,12 @@ export default function SimpleCVBuilder() {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                   <p className="text-sm text-gray-600 mb-2">
-                    Upload your CV to auto-fill the fields. Supported formats: PDF, DOCX, TXT.
+                    Upload your CV to auto-fill the fields. Supported formats: DOCX, TXT (PDF coming soon).
                   </p>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.docx,.txt"
+                    accept=".docx,.txt"
                     onChange={handleFileUpload}
                     className="hidden"
                   />

@@ -1,0 +1,37 @@
+John Smith
+Senior Software Engineer
+john.smith@email.com
+(555) 123-4567
+San Francisco, CA
+
+PROFESSIONAL SUMMARY
+Experienced software engineer with 8+ years of expertise in full-stack development, cloud architecture, and team leadership. Proven track record of delivering scalable web applications and leading cross-functional teams to achieve business objectives.
+
+WORK EXPERIENCE
+
+Senior Software Engineer | TechCorp Inc | 2020 - Present
+• Led development of microservices architecture serving 1M+ users
+• Implemented CI/CD pipelines reducing deployment time by 60%
+• Mentored junior developers and conducted code reviews
+• Technologies: React, Node.js, AWS, Docker, Kubernetes
+
+Software Engineer | StartupXYZ | 2018 - 2020
+• Developed responsive web applications using React and TypeScript
+• Built RESTful APIs with Node.js and Express
+• Collaborated with product team to define technical requirements
+• Improved application performance by 40% through optimization
+
+Junior Developer | WebSolutions | 2016 - 2018
+• Created dynamic websites using HTML, CSS, and JavaScript
+• Maintained legacy PHP applications
+• Participated in agile development processes
+• Learned modern development practices and frameworks
+
+EDUCATION
+
+Bachelor of Science in Computer Science | University of California, Berkeley | 2016
+• Graduated Magna Cum Laude
+• Relevant coursework: Data Structures, Algorithms, Software Engineering
+
+SKILLS
+JavaScript, TypeScript, React, Node.js, Python, Java, AWS, Docker, Kubernetes, Git, SQL, MongoDB, PostgreSQL, HTML, CSS, Agile, Scrum, Team Leadership, Problem Solving, Communication
