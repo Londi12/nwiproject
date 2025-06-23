@@ -361,27 +361,130 @@ function extractSummary(text) {
 }
 
 /**
- * Extract experience from text (simplified version)
+ * Extract experience from text (enhanced version)
  */
 function extractExperience(text) {
   const experiences = [];
+  console.log('Extracting experience from text...');
 
-  // Look for experience section
-  const experienceMatch = text.match(/(?:experience|work history|employment)[:.\s]*\n([^]*?)(?=\n\s*(?:education|skills|activities):)/is);
+  // Multiple patterns to match experience sections
+  const experiencePatterns = [
+    /(?:work\s+experience|professional\s+experience|employment\s+history|career\s+history|experience)[:.\s]*\n([^]*?)(?=\n\s*(?:education|skills|qualifications|certifications|projects|activities|references)[:.\s]*\n)/is,
+    /(?:work\s+experience|professional\s+experience|employment\s+history|career\s+history|experience)[:.\s]*\n([^]*?)(?=\n\s*[A-Z][A-Z\s]+\s*\n)/is,
+    /(?:work\s+experience|professional\s+experience|employment\s+history|career\s+history|experience)[:.\s]*\n([^]*?)$/is
+  ];
 
-  if (experienceMatch) {
-    const experienceText = experienceMatch[1];
-    const lines = experienceText.split('\n');
+  let experienceText = '';
+  for (const pattern of experiencePatterns) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[1].trim().length > 20) {
+      experienceText = match[1].trim();
+      console.log('Found experience section:', experienceText.substring(0, 100) + '...');
+      break;
+    }
+  }
 
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.includes('|') && trimmedLine.length > 10) {
-        const parts = trimmedLine.split('|').map(part => part.trim());
-        if (parts.length >= 2) {
+  if (experienceText) {
+    // Split by common job entry patterns
+    const jobEntries = experienceText.split(/\n(?=\s*[A-Z][^|\n]*(?:\||at|@|\n))/);
+
+    for (const entry of jobEntries) {
+      const trimmedEntry = entry.trim();
+      if (trimmedEntry.length < 10) continue;
+
+      let experience = {
+        title: '',
+        company: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        description: ''
+      };
+
+      // Pattern 1: Title | Company | Location | Dates
+      if (trimmedEntry.includes('|')) {
+        const parts = trimmedEntry.split('|').map(part => part.trim());
+        experience.title = parts[0] || '';
+        experience.company = parts[1] || '';
+        experience.location = parts[2] || '';
+        const datesPart = parts[3] || '';
+        const dateMatch = datesPart.match(/(\d{4}|\w+\s+\d{4})\s*[-–—]\s*(\d{4}|\w+\s+\d{4}|present|current)/i);
+        if (dateMatch) {
+          experience.startDate = dateMatch[1];
+          experience.endDate = dateMatch[2];
+        }
+      } else {
+        // Pattern 2: Multi-line format
+        const lines = trimmedEntry.split('\n').map(line => line.trim()).filter(line => line);
+
+        if (lines.length >= 2) {
+          // First line is usually the job title
+          experience.title = lines[0];
+
+          // Look for company name (often contains "at", "Company:", or is the second line)
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.toLowerCase().includes('company:') || line.toLowerCase().includes('employer:')) {
+              experience.company = line.replace(/^(company|employer):\s*/i, '');
+              break;
+            } else if (line.match(/^[A-Z][^.!?]*$/) && !line.match(/^\d/) && line.length < 100) {
+              experience.company = line;
+              break;
+            }
+          }
+
+          // Look for dates
+          const fullText = trimmedEntry;
+          const dateMatch = fullText.match(/(\d{1,2}\/\d{4}|\w+\s+\d{4}|\d{4})\s*[-–—]\s*(\d{1,2}\/\d{4}|\w+\s+\d{4}|\d{4}|present|current)/i);
+          if (dateMatch) {
+            experience.startDate = dateMatch[1];
+            experience.endDate = dateMatch[2];
+          }
+
+          // Look for location
+          const locationMatch = fullText.match(/(?:location|address):\s*([^|\n]+)/i) ||
+                               fullText.match(/([A-Z][a-z]+,\s*[A-Z]{2,})/);
+          if (locationMatch) {
+            experience.location = locationMatch[1].trim();
+          }
+
+          // Extract description (usually after the basic info)
+          const descriptionLines = lines.slice(2).filter(line =>
+            !line.match(/^\d{4}/) &&
+            !line.toLowerCase().includes('location:') &&
+            !line.toLowerCase().includes('company:') &&
+            line.length > 10
+          );
+          if (descriptionLines.length > 0) {
+            experience.description = descriptionLines.join(' ');
+          }
+        }
+      }
+
+      // Only add if we have at least a title or company
+      if (experience.title || experience.company) {
+        experiences.push(experience);
+        console.log('Added experience:', experience);
+      }
+    }
+  }
+
+  // Fallback: look for any job-like patterns in the text
+  if (experiences.length === 0) {
+    const jobTitlePatterns = [
+      /(?:^|\n)\s*([A-Z][^|\n]*(?:engineer|developer|manager|analyst|specialist|coordinator|assistant|director|supervisor|lead|senior|junior)[^|\n]*)/gim,
+      /(?:^|\n)\s*([A-Z][^|\n]*(?:at|@)\s+[A-Z][^|\n]*)/gim
+    ];
+
+    for (const pattern of jobTitlePatterns) {
+      const matches = text.matchAll(pattern);
+      for (const match of matches) {
+        if (match[1] && match[1].trim().length > 5) {
+          const parts = match[1].split(/\s+(?:at|@)\s+/);
           experiences.push({
-            title: parts[0] || '',
-            company: parts[1] || '',
-            location: parts[2] || '',
+            title: parts[0] ? parts[0].trim() : '',
+            company: parts[1] ? parts[1].trim() : '',
+            location: '',
             startDate: '',
             endDate: '',
             description: ''
@@ -391,38 +494,123 @@ function extractExperience(text) {
     }
   }
 
+  console.log('Final extracted experiences:', experiences);
   return experiences;
 }
 
 /**
- * Extract education from text (simplified version)
+ * Extract education from text (enhanced version)
  */
 function extractEducation(text) {
   const education = [];
+  console.log('Extracting education from text...');
 
-  // Look for education section
-  const educationMatch = text.match(/(?:education|academic)[:.\s]*\n([^]*?)(?=\n\s*(?:skills|activities|experience):)/is);
+  // Multiple patterns to match education sections
+  const educationPatterns = [
+    /(?:education|academic\s+background|qualifications|academic\s+qualifications)[:.\s]*\n([^]*?)(?=\n\s*(?:experience|skills|work|employment|certifications|projects|activities|references)[:.\s]*\n)/is,
+    /(?:education|academic\s+background|qualifications|academic\s+qualifications)[:.\s]*\n([^]*?)(?=\n\s*[A-Z][A-Z\s]+\s*\n)/is,
+    /(?:education|academic\s+background|qualifications|academic\s+qualifications)[:.\s]*\n([^]*?)$/is
+  ];
 
-  if (educationMatch) {
-    const educationText = educationMatch[1];
-    const lines = educationText.split('\n');
+  let educationText = '';
+  for (const pattern of educationPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[1].trim().length > 10) {
+      educationText = match[1].trim();
+      console.log('Found education section:', educationText.substring(0, 100) + '...');
+      break;
+    }
+  }
 
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.includes('|') && trimmedLine.length > 10) {
-        const parts = trimmedLine.split('|').map(part => part.trim());
-        if (parts.length >= 2) {
+  if (educationText) {
+    // Split by common education entry patterns
+    const eduEntries = educationText.split(/\n(?=\s*[A-Z][^|\n]*(?:\||at|@|,|\n))/);
+
+    for (const entry of eduEntries) {
+      const trimmedEntry = entry.trim();
+      if (trimmedEntry.length < 10) continue;
+
+      let eduItem = {
+        degree: '',
+        institution: '',
+        location: '',
+        graduationDate: ''
+      };
+
+      // Pattern 1: Degree | Institution | Location | Date
+      if (trimmedEntry.includes('|')) {
+        const parts = trimmedEntry.split('|').map(part => part.trim());
+        eduItem.degree = parts[0] || '';
+        eduItem.institution = parts[1] || '';
+        eduItem.location = parts[2] || '';
+        eduItem.graduationDate = parts[3] || '';
+      } else {
+        // Pattern 2: Multi-line format
+        const lines = trimmedEntry.split('\n').map(line => line.trim()).filter(line => line);
+
+        if (lines.length >= 1) {
+          // First line is usually the degree
+          eduItem.degree = lines[0];
+
+          // Look for institution name
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.toLowerCase().includes('university') ||
+                line.toLowerCase().includes('college') ||
+                line.toLowerCase().includes('institute') ||
+                line.toLowerCase().includes('school') ||
+                line.match(/^[A-Z][^.!?]*$/) && line.length < 100) {
+              eduItem.institution = line;
+              break;
+            }
+          }
+
+          // Look for graduation date
+          const fullText = trimmedEntry;
+          const dateMatch = fullText.match(/(\d{4}|\w+\s+\d{4})/);
+          if (dateMatch) {
+            eduItem.graduationDate = dateMatch[1];
+          }
+
+          // Look for location
+          const locationMatch = fullText.match(/([A-Z][a-z]+,\s*[A-Z]{2,})/);
+          if (locationMatch) {
+            eduItem.location = locationMatch[1].trim();
+          }
+        }
+      }
+
+      // Only add if we have at least a degree or institution
+      if (eduItem.degree || eduItem.institution) {
+        education.push(eduItem);
+        console.log('Added education:', eduItem);
+      }
+    }
+  }
+
+  // Fallback: look for degree patterns anywhere in the text
+  if (education.length === 0) {
+    const degreePatterns = [
+      /(?:bachelor|master|phd|doctorate|diploma|certificate|degree)(?:\s+of|\s+in)?\s+[^|\n]+/gim,
+      /(?:b\.?a\.?|b\.?s\.?|m\.?a\.?|m\.?s\.?|ph\.?d\.?|m\.?b\.?a\.?)\s+[^|\n]+/gim
+    ];
+
+    for (const pattern of degreePatterns) {
+      const matches = text.matchAll(pattern);
+      for (const match of matches) {
+        if (match[0] && match[0].trim().length > 5) {
           education.push({
-            degree: parts[0] || '',
-            institution: parts[1] || '',
-            location: parts[2] || '',
-            graduationDate: parts[3] || ''
+            degree: match[0].trim(),
+            institution: '',
+            location: '',
+            graduationDate: ''
           });
         }
       }
     }
   }
 
+  console.log('Final extracted education:', education);
   return education;
 }
 

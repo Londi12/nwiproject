@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { User as AuthUser } from '@/entities/User';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,7 +33,7 @@ import {
   X
 } from "lucide-react";
 
-export default function Layout({ children, currentPageName }) {
+export default function Layout({ children, currentPageName, onNavigate }) {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -69,10 +67,10 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = async () => {
     try {
       await AuthUser.logout();
-      window.location.href = createPageUrl('Welcome');
+      onNavigate?.('welcome');
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = createPageUrl('Welcome');
+      onNavigate?.('welcome');
     }
   };
 
@@ -101,7 +99,7 @@ export default function Layout({ children, currentPageName }) {
       <header className="bg-white border-b border-slate-200 px-4 lg:px-6 py-4 sticky top-0 z-40">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to={createPageUrl('Dashboard')} className="flex items-center gap-3">
+            <button onClick={() => onNavigate?.('Dashboard')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-10 h-10 bg-gradient-to-r from-red-500 via-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Plane className="text-white w-5 h-5" />
               </div>
@@ -109,32 +107,32 @@ export default function Layout({ children, currentPageName }) {
                 <h1 className="text-xl lg:text-2xl font-bold text-slate-900">NWI Visas</h1>
                 <p className="text-xs text-slate-500">Immigration Services</p>
               </div>
-            </Link>
+            </button>
             
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-6">
-              <Link 
-                to={createPageUrl('Dashboard')} 
+              <button
+                onClick={() => onNavigate?.('Dashboard')}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                  currentPageName === 'Dashboard' 
-                    ? 'bg-blue-100 text-blue-700' 
+                  currentPageName === 'Dashboard'
+                    ? 'bg-blue-100 text-blue-700'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <Globe className="w-4 h-4" />
                 Dashboard
-              </Link>
-              <Link 
-                to={createPageUrl('KnowledgeBase')} 
+              </button>
+              <button
+                onClick={() => onNavigate?.('KnowledgeBase')}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                  currentPageName === 'KnowledgeBase' 
-                    ? 'bg-blue-100 text-blue-700' 
+                  currentPageName === 'KnowledgeBase'
+                    ? 'bg-blue-100 text-blue-700'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <BookOpen className="w-4 h-4" />
                 Knowledge Base
-              </Link>
+              </button>
             </nav>
 
             {/* Mobile Menu Button */}
@@ -167,44 +165,38 @@ export default function Layout({ children, currentPageName }) {
                   Quick Reference
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('KnowledgeBase')} className="w-full">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Express Entry Process</p>
-                        <p className="text-xs text-slate-500">Complete guide for Canadian immigration</p>
-                      </div>
+                <DropdownMenuItem onClick={() => onNavigate?.('KnowledgeBase')}>
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-green-600" />
                     </div>
-                  </Link>
+                    <div>
+                      <p className="font-medium">Express Entry Process</p>
+                      <p className="text-xs text-slate-500">Complete guide for Canadian immigration</p>
+                    </div>
+                  </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('KnowledgeBase')} className="w-full">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <FolderOpen className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Required Documents</p>
-                        <p className="text-xs text-slate-500">Checklist for South African applicants</p>
-                      </div>
+                <DropdownMenuItem onClick={() => onNavigate?.('KnowledgeBase')}>
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FolderOpen className="w-4 h-4 text-blue-600" />
                     </div>
-                  </Link>
+                    <div>
+                      <p className="font-medium">Required Documents</p>
+                      <p className="text-xs text-slate-500">Checklist for South African applicants</p>
+                    </div>
+                  </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('KnowledgeBase')} className="w-full">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Calendar className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Processing Times</p>
-                        <p className="text-xs text-slate-500">Current estimated timelines</p>
-                      </div>
+                <DropdownMenuItem onClick={() => onNavigate?.('KnowledgeBase')}>
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-purple-600" />
                     </div>
-                  </Link>
+                    <div>
+                      <p className="font-medium">Processing Times</p>
+                      <p className="text-xs text-slate-500">Current estimated timelines</p>
+                    </div>
+                  </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -285,11 +277,9 @@ export default function Layout({ children, currentPageName }) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('Profile')} className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Profile Settings</span>
-                  </Link>
+                <DropdownMenuItem onClick={() => onNavigate?.('profile')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Profile Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <MessageSquare className="mr-2 h-4 w-4" />
@@ -309,30 +299,34 @@ export default function Layout({ children, currentPageName }) {
         {mobileMenuOpen && (
           <div className="lg:hidden mt-4 pt-4 border-t border-slate-200">
             <nav className="flex flex-col gap-2">
-              <Link 
-                to={createPageUrl('Dashboard')} 
+              <button
+                onClick={() => {
+                  onNavigate?.('Dashboard');
+                  setMobileMenuOpen(false);
+                }}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                  currentPageName === 'Dashboard' 
-                    ? 'bg-blue-100 text-blue-700' 
+                  currentPageName === 'Dashboard'
+                    ? 'bg-blue-100 text-blue-700'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
               >
                 <Globe className="w-4 h-4" />
                 Dashboard
-              </Link>
-              <Link 
-                to={createPageUrl('KnowledgeBase')} 
+              </button>
+              <button
+                onClick={() => {
+                  onNavigate?.('KnowledgeBase');
+                  setMobileMenuOpen(false);
+                }}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                  currentPageName === 'KnowledgeBase' 
-                    ? 'bg-blue-100 text-blue-700' 
+                  currentPageName === 'KnowledgeBase'
+                    ? 'bg-blue-100 text-blue-700'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
               >
                 <BookOpen className="w-4 h-4" />
                 Knowledge Base
-              </Link>
+              </button>
             </nav>
           </div>
         )}

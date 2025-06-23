@@ -28,8 +28,9 @@ import DocumentsCompliance from '@/components/admin/DocumentsCompliance';
 import CVToolsUsage from '@/components/admin/CVToolsUsage';
 import ActivityLog from '@/components/admin/ActivityLog';
 import AdminControls from '@/components/admin/AdminControls';
+import DropdownTest from '@/components/test/DropdownTest';
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onNavigate }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [adminStats, setAdminStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -120,11 +121,17 @@ export default function AdminDashboard() {
       label: 'Admin Controls',
       icon: Settings,
       component: AdminControls
+    },
+    {
+      id: 'test',
+      label: 'Dropdown Test',
+      icon: Eye,
+      component: DropdownTest
     }
   ];
 
   return (
-    <Layout currentPageName="Admin Dashboard">
+    <Layout currentPageName="Admin Dashboard" onNavigate={onNavigate}>
       <div className="space-y-6">
         {/* Admin Header */}
         <div className="flex items-center justify-between">
@@ -219,7 +226,7 @@ export default function AdminDashboard() {
           <CardContent className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="border-b border-slate-200 px-6 py-4">
-                <TabsList className="grid grid-cols-3 lg:grid-cols-9 gap-2 bg-slate-50 p-1 rounded-xl">
+                <TabsList className="grid grid-cols-3 lg:grid-cols-10 gap-2 bg-slate-50 p-1 rounded-xl">
                   {adminTabs.map((tab) => {
                     const IconComponent = tab.icon;
                     return (

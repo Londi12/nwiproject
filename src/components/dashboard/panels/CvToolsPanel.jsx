@@ -1,6 +1,6 @@
 import React from "react";
-import ImprovedCVBuilder from "../../cv/ImprovedCVBuilder";
+import SimpleCVBuilder from "../../cv/SimpleCVBuilder";
 
 export default function CvToolsPanel() {
-  return <ImprovedCVBuilder />;
+  return <SimpleCVBuilder />;
 }

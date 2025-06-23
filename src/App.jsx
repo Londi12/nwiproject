@@ -15,6 +15,12 @@ function App() {
   const [showAdminPanel, setShowAdminPanel] = useState(import.meta.env.DEV); // Show in development by default
   const [adminKeySequence, setAdminKeySequence] = useState('');
 
+  // Debug navigation
+  const handleNavigation = (page) => {
+    console.log('Navigating to:', page);
+    setCurrentPage(page);
+  };
+
   useEffect(() => {
     // Check if user is authenticated on app load and listen to auth changes
     const checkUser = async () => {
@@ -32,12 +38,14 @@ function App() {
 
     // Listen to auth state changes
     const { data: { subscription } } = User.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session);
       if (event === 'SIGNED_IN') {
         setUser(session?.user || null);
+        setLoading(false);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -78,8 +86,15 @@ function App() {
   }, [adminKeySequence]);
 
   const handleLogout = async () => {
-    await User.logout();
-    setUser(null);
+    try {
+      await User.logout();
+      setUser(null);
+      setCurrentPage('welcome');
+    } catch (error) {
+      console.error('Logout error:', error);
+      setUser(null);
+      setCurrentPage('welcome');
+    }
   };
 
   const renderPage = () => {
@@ -91,10 +106,10 @@ function App() {
       case 'profile':
         return <Profile />;
       case 'admin':
-        return <AdminDashboard />;
+        return <AdminDashboard onNavigate={handleNavigation} />;
       case 'dashboard':
       default:
-        return <Dashboard onNavigate={setCurrentPage} />;
+        return <Dashboard onNavigate={handleNavigation} />;
     }
   };
 
@@ -110,9 +125,9 @@ function App() {
     );
   }
 
-  // Show Welcome page if not authenticated
-  if (!user) {
-    return <Welcome />;
+  // Show Welcome page if not authenticated (unless accessing admin in dev mode)
+  if (!user && !(import.meta.env.DEV && currentPage === 'admin')) {
+    return <Welcome onNavigate={handleNavigation} />;
   }
 
   // Show main application if authenticated
@@ -129,14 +144,15 @@ function App() {
               NWI Portal
               {import.meta.env.DEV && (
                 <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                  DEV
+                  DEV {showAdminPanel ? '(Admin Visible)' : '(Admin Hidden)'}
+                  {(!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) && ' - Mock Data'}
                 </span>
               )}
             </h1>
             <div className="flex items-center space-x-4">
               <div className="flex space-x-4">
                 <button
-                  onClick={() => setCurrentPage('dashboard')}
+                  onClick={() => handleNavigation('dashboard')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     currentPage === 'dashboard'
                       ? 'bg-blue-100 text-blue-700'
@@ -146,7 +162,7 @@ function App() {
                   Dashboard
                 </button>
                 <button
-                  onClick={() => setCurrentPage('leads')}
+                  onClick={() => handleNavigation('leads')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     currentPage === 'leads'
                       ? 'bg-blue-100 text-blue-700'
@@ -156,7 +172,7 @@ function App() {
                   Leads
                 </button>
                 <button
-                  onClick={() => setCurrentPage('welcome')}
+                  onClick={() => handleNavigation('welcome')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     currentPage === 'welcome'
                       ? 'bg-blue-100 text-blue-700'
@@ -167,7 +183,7 @@ function App() {
                 </button>
                 {showAdminPanel && (
                   <button
-                    onClick={() => setCurrentPage('admin')}
+                    onClick={() => handleNavigation('admin')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       currentPage === 'admin'
                         ? 'bg-red-100 text-red-700'
@@ -179,21 +195,38 @@ function App() {
                     Admin
                   </button>
                 )}
+                {import.meta.env.DEV && !showAdminPanel && (
+                  <button
+                    onClick={() => setShowAdminPanel(true)}
+                    className="px-3 py-1 rounded text-xs bg-orange-100 text-orange-700 hover:bg-orange-200"
+                    title="Force show admin panel (DEV only)"
+                  >
+                    Show Admin
+                  </button>
+                )}
               </div>
               <div className="flex items-center space-x-3 border-l border-gray-200 pl-4">
-                <span className="text-sm text-gray-600">Welcome, {user.name}</span>
+                <span className="text-sm text-gray-600">
+                  Welcome, {user ? user.name : 'Developer (Not Logged In)'}
+                </span>
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleNavigation('profile')}
+                    className={currentPage === 'profile' ? 'bg-blue-100 text-blue-700' : ''}
+                  >
+                    <UserCircle className="w-4 h-4 mr-2" />
+                    Profile
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setCurrentPage('profile')}
-                  className={currentPage === 'profile' ? 'bg-blue-100 text-blue-700' : ''}
+                  onClick={user ? handleLogout : () => handleNavigation('welcome')}
                 >
-                  <UserCircle className="w-4 h-4 mr-2" />
-                  Profile
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  {user ? 'Logout' : 'Back to Welcome'}
                 </Button>
               </div>
             </div>

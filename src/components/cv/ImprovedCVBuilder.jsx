@@ -16,23 +16,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { detectFileTypeFromName, parseTextToCV } from "../../utils/cvParser";
 import { CVParserDebugPanel } from "./CVParserDebugPanel";
+import { CVPreview } from "./CVPreview";
 import { UploadFile, ExtractDataFromUploadedFile } from "@/integrations/Core";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 const CV_TEMPLATES = {
   SoftwareEngineer: {
-    name: "Software Engineer",
-    description: "ATS-optimized template for tech professionals and Express Entry candidates",
+    name: "Modern Professional",
+    description: "Clean, ATS-optimized template perfect for tech professionals and Express Entry applications",
     preview: "/cv-templates/software-engineer-template.html",
-    features: ["Express Entry optimized", "Tech industry focused", "ATS-friendly format", "Skills matrix layout"],
+    features: ["ATS-Optimized", "Express Entry Ready", "Clean Layout", "Professional Typography"],
     category: "Technology",
     immigration_focus: "Express Entry, Provincial Nominee Program",
     color: "blue",
     icon: "💻",
     layout: "modern",
-    sections: ["header", "summary", "skills", "experience", "education", "projects"],
-    atsScore: 95
+    sections: ["header", "summary", "experience", "education", "skills"],
+    atsScore: 98
   },
   Healthcare: {
     name: "Healthcare Professional",
@@ -98,6 +99,32 @@ const CV_TEMPLATES = {
     layout: "academic",
     sections: ["header", "summary", "publications", "experience", "education", "research"],
     atsScore: 87
+  },
+  Graduate: {
+    name: "Graduate Entry Level",
+    description: "Perfect template for recent graduates and entry-level professionals",
+    preview: "/cv-templates/graduate-template.html",
+    features: ["Education emphasis", "Internship focus", "Skills highlight", "Fresh graduate optimized"],
+    category: "Graduate",
+    immigration_focus: "Express Entry, Student to PR pathway",
+    color: "teal",
+    icon: "🎯",
+    layout: "graduate",
+    sections: ["header", "profile", "education", "experience", "skills"],
+    atsScore: 89
+  },
+  Digital: {
+    name: "Digital Portfolio",
+    description: "Modern digital template for creative and tech professionals",
+    preview: "/cv-templates/digital-template.html",
+    features: ["Portfolio showcase", "Interactive design", "Digital focus", "Creative layout"],
+    category: "Digital",
+    immigration_focus: "Express Entry, Self-Employed Persons",
+    color: "blue",
+    icon: "💻",
+    layout: "digital",
+    sections: ["header", "about", "portfolio", "skills", "contact"],
+    atsScore: 86
   }
 };
 
@@ -184,6 +211,19 @@ export default function ImprovedCVBuilder() {
   });
   const previewRef = useRef(null);
 
+  // Map old template names to new template types
+  const getTemplateMapping = (templateKey) => {
+    const templateMap = {
+      'SoftwareEngineer': 'professional',
+      'Healthcare': 'professional',
+      'BusinessManager': 'executive',
+      'SkilledTrades': 'technical',
+      'Creative': 'creative',
+      'Academic': 'graduate'
+    };
+    return templateMap[templateKey] || 'professional';
+  };
+
   const parseCVWithIntegration = async (uploadResult) => {
     try {
       const result = await ExtractDataFromUploadedFile(uploadResult);
@@ -198,7 +238,22 @@ export default function ImprovedCVBuilder() {
         });
 
         if (parseResult.success) {
-          return parseResult.data;
+          // Map the parsed data to the expected format
+          const mappedData = {
+            name: parseResult.data.personalInfo?.fullName || '',
+            email: parseResult.data.personalInfo?.email || '',
+            phone: parseResult.data.personalInfo?.phone || '',
+            location: parseResult.data.personalInfo?.location || '',
+            jobTitle: parseResult.data.personalInfo?.jobTitle || '',
+            experience_summary: parseResult.data.summary || '',
+            skills: Array.isArray(parseResult.data.skills)
+              ? parseResult.data.skills.map(skill => typeof skill === 'string' ? skill : skill.name)
+              : [],
+            work_experience: parseResult.data.experience || [],
+            education: parseResult.data.education || []
+          };
+          console.log('Mapped CV data:', mappedData);
+          return mappedData;
         } else {
           throw new Error(parseResult.error || "Failed to parse CV content");
         }
@@ -304,125 +359,157 @@ export default function ImprovedCVBuilder() {
         <title>${extractedData.name || 'Professional CV'}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { 
-            font-family: 'Arial', sans-serif; 
-            line-height: 1.5; 
-            color: #333; 
+          body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
             background: white;
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 20mm;
+            padding: 15mm 20mm;
+            font-size: 11pt;
           }
-          .header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            border-bottom: 3px solid ${theme.primary}; 
-            padding-bottom: 20px; 
+          .header {
+            text-align: left;
+            margin-bottom: 25px;
+            border-bottom: 2px solid ${theme.primary};
+            padding-bottom: 15px;
           }
-          .name { 
-            font-size: 32px; 
-            font-weight: bold; 
-            color: ${theme.primary}; 
-            margin-bottom: 8px; 
+          .name {
+            font-size: 24pt;
+            font-weight: 700;
+            color: ${theme.primary};
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
           }
-          .title { 
-            font-size: 18px; 
-            color: #64748b; 
-            margin-bottom: 15px; 
-            font-weight: 500;
+          .title {
+            font-size: 14pt;
+            color: #34495e;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
           }
-          .contact { 
-            font-size: 14px; 
-            color: #475569; 
+          .contact {
+            font-size: 10pt;
+            color: #5d6d7e;
             display: flex;
-            justify-content: center;
-            gap: 20px;
+            justify-content: flex-start;
+            gap: 15px;
             flex-wrap: wrap;
+            margin-top: 8px;
           }
           .contact-item {
             display: flex;
             align-items: center;
             gap: 5px;
           }
-          .section { 
-            margin-bottom: 25px; 
+          .section {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
           }
-          .section-title { 
-            font-size: 16px; 
-            font-weight: bold; 
-            color: ${theme.primary}; 
-            text-transform: uppercase; 
-            border-bottom: 2px solid ${theme.secondary}; 
-            padding-bottom: 8px; 
-            margin-bottom: 15px; 
-            letter-spacing: 1px;
+          .section-title {
+            font-size: 12pt;
+            font-weight: 700;
+            color: ${theme.primary};
+            text-transform: uppercase;
+            border-bottom: 1px solid ${theme.primary};
+            padding-bottom: 4px;
+            margin-bottom: 12px;
+            letter-spacing: 0.8px;
           }
-          .experience-item, .education-item { 
-            margin-bottom: 20px; 
-            padding: 15px;
-            background: ${theme.secondary};
-            border-radius: 8px;
-            border-left: 4px solid ${theme.primary};
+          .experience-item, .education-item {
+            margin-bottom: 15px;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            border-left: none;
+            page-break-inside: avoid;
           }
-          .job-title { 
-            font-weight: bold; 
-            color: #1e293b; 
-            font-size: 16px;
+          .job-title {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 11pt;
+            margin-bottom: 3px;
+          }
+          .company {
+            color: ${theme.primary};
+            font-weight: 600;
+            font-size: 10pt;
+            margin-bottom: 2px;
+          }
+          .date {
+            color: #7f8c8d;
+            font-size: 9pt;
+            float: right;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-style: italic;
+          }
+          .location {
+            color: #7f8c8d;
+            font-size: 9pt;
+            font-style: italic;
+          }
+          .description {
+            margin-top: 8px;
+            font-size: 10pt;
+            line-height: 1.5;
+            text-align: justify;
+          }
+          .description ul {
+            margin-left: 15px;
+            margin-top: 5px;
+            padding-left: 0;
+          }
+          .description li {
+            margin-bottom: 3px;
+            font-size: 10pt;
+            line-height: 1.4;
+          }
+          .description p {
             margin-bottom: 5px;
           }
-          .company { 
-            color: ${theme.accent}; 
-            font-weight: 600; 
-            font-size: 14px;
-          }
-          .date { 
-            color: #64748b; 
-            font-size: 12px; 
-            float: right; 
-            background: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-          }
-          .location { 
-            color: #64748b; 
-            font-size: 12px; 
-          }
-          .description { 
-            margin-top: 10px; 
-            font-size: 13px; 
-            line-height: 1.6;
-          }
-          .description ul { 
-            margin-left: 20px; 
-            margin-top: 8px;
-          }
-          .description li { 
-            margin-bottom: 5px; 
+          @media print {
+            body {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .section {
+              page-break-inside: avoid;
+            }
+            .experience-item, .education-item {
+              page-break-inside: avoid;
+            }
           }
           .skills-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
           }
           .skill-item {
-            background: ${theme.secondary};
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            text-align: center;
+            background: transparent;
+            padding: 3px 8px;
+            border-radius: 0;
+            font-size: 10pt;
+            text-align: left;
             border: 1px solid ${theme.primary};
-            color: ${theme.accent};
-            font-weight: 500;
+            color: #2c3e50;
+            font-weight: 400;
+            display: inline-block;
           }
-          .summary { 
-            font-size: 14px; 
-            text-align: justify; 
-            line-height: 1.7; 
-            background: ${theme.secondary};
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid ${theme.primary};
+          .summary {
+            font-size: 10pt;
+            text-align: justify;
+            line-height: 1.6;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            border-left: none;
+            margin-bottom: 15px;
           }
           .clearfix::after { 
             content: ""; 
@@ -550,33 +637,39 @@ export default function ImprovedCVBuilder() {
       tempContainer.style.top = '0';
       document.body.appendChild(tempContainer);
 
-      // Use html2canvas to convert HTML to canvas
+      // Use html2canvas to convert HTML to canvas with proper A4 dimensions
       const canvas = await html2canvas(tempContainer, {
-        scale: 2,
+        scale: 3, // Higher scale for better quality
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        width: 794, // A4 width in pixels at 96 DPI
-        height: 1123 // A4 height in pixels at 96 DPI
+        width: 794, // A4 width in pixels at 96 DPI (210mm)
+        height: 1123, // A4 height in pixels at 96 DPI (297mm)
+        windowWidth: 794,
+        windowHeight: 1123,
+        scrollX: 0,
+        scrollY: 0
       });
 
       // Remove temporary container
       document.body.removeChild(tempContainer);
 
-      // Create PDF
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
+      // Create PDF with exact A4 dimensions
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
 
-      // Calculate dimensions to fit A4
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
+      const imgData = canvas.toDataURL('image/png', 0.95);
 
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      // A4 dimensions in mm
+      const a4Width = 210;
+      const a4Height = 297;
+
+      // Add image to PDF with exact A4 dimensions
+      pdf.addImage(imgData, 'PNG', 0, 0, a4Width, a4Height, '', 'FAST');
 
       // Download the PDF
       const fileName = `CV_${(generatedCV.data.name || 'Professional').replace(/\s/g, '_')}_${generatedCV.template}_${generatedCV.country}.pdf`;
@@ -1202,6 +1295,15 @@ export default function ImprovedCVBuilder() {
                     </div>
                     <h3 className="font-bold text-slate-900 mb-1">{template.name}</h3>
                     <p className="text-xs text-slate-600 mb-2">{template.description}</p>
+
+                    {/* Mini Template Preview */}
+                    <div className="mt-3 bg-white rounded-lg p-2 border border-slate-200">
+                      <CVPreview
+                        template={getTemplateMapping(key)}
+                        userData={getRealisticTemplateData(key)}
+                        className="transform scale-50 origin-top-left w-[200%] h-32 overflow-hidden"
+                      />
+                    </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className={`bg-${template.color}-200 text-${template.color}-800 text-xs`}>
                         {template.category}
@@ -1650,7 +1752,7 @@ export default function ImprovedCVBuilder() {
       )}
 
       {/* Live Preview */}
-      {showPreview && generatedCV && (
+      {showPreview && extractedData && (
         <Card className="border-0 shadow-lg rounded-2xl bg-white">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2">
@@ -1661,11 +1763,25 @@ export default function ImprovedCVBuilder() {
           </CardHeader>
           <CardContent>
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <div
-                ref={previewRef}
-                className="bg-white p-8 max-h-[600px] overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: generatedCV.html }}
-              />
+              <div ref={previewRef} className="bg-white p-8 max-h-[600px] overflow-y-auto">
+                <CVPreview
+                  template={getTemplateMapping(selectedTemplate)}
+                  userData={{
+                    personalInfo: {
+                      fullName: extractedData.name || '',
+                      email: extractedData.email || '',
+                      phone: extractedData.phone || '',
+                      location: extractedData.location || '',
+                      jobTitle: extractedData.jobTitle || ''
+                    },
+                    summary: extractedData.experience_summary || '',
+                    experience: extractedData.work_experience || [],
+                    education: extractedData.education || [],
+                    skills: extractedData.skills || []
+                  }}
+                  className="w-full"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
