@@ -7,6 +7,7 @@ import KnowledgeBase from './pages/KnowledgeBase'
 import { User } from './entities/User'
 import { Button } from './components/ui/button'
 import { LogOut, UserCircle, Shield } from 'lucide-react'
+import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -277,7 +278,9 @@ function App() {
       </nav>
 
       <div className="container mx-auto p-3 sm:p-6">
-        {renderPage()}
+        <ErrorBoundary>
+          {renderPage()}
+        </ErrorBoundary>
       </div>
     </div>
   )

@@ -6,17 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Upload, Download, FileText, Sparkles, Eye, User, Briefcase, 
-  GraduationCap, Award, Languages, CheckCircle, AlertCircle, 
+import {
+  Upload, Download, FileText, Sparkles, Eye, User, Briefcase,
+  GraduationCap, Award, Languages, CheckCircle, AlertCircle,
   Loader2, Settings, Globe, MapPin, Phone, Mail, Calendar,
-  Edit3, Save, X, Plus, Trash2, Palette, Layout, Zap, Monitor
+  Edit3, Save, X, Plus, Trash2, Palette, Layout, Zap, Monitor,
+  BarChart3
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { detectFileTypeFromName, parseTextToCV } from "../../utils/cvParser";
 import { CVParserDebugPanel } from "./CVParserDebugPanel";
 import { CVPreview } from "./CVPreview";
+import ATSScorePanel from "./ATSScorePanel";
 import { UploadFile, ExtractDataFromUploadedFile } from "@/integrations/Core";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -209,7 +213,48 @@ export default function ImprovedCVBuilder() {
     spacing: 'normal',
     margins: 'standard'
   });
+  const [showATSAnalysis, setShowATSAnalysis] = useState(false);
+  const [targetVisa, setTargetVisa] = useState('Express Entry');
+  const [targetIndustry, setTargetIndustry] = useState('Software Engineering');
   const previewRef = useRef(null);
+
+  // Generate enhanced summary based on target visa and industry
+  const generateEnhancedSummary = (data, visa, industry) => {
+    const templates = {
+      'Software Engineering': {
+        'Express Entry': `Experienced Software Engineer with ${calculateExperience(data.work_experience)}+ years developing scalable applications using modern technologies. Proven track record of leading cross-functional teams and delivering high-quality solutions. Seeking to contribute technical expertise to Canadian technology sector through Express Entry program.`,
+        'Skilled Worker (UK)': `Senior Software Engineer with expertise in full-stack development and cloud technologies. Strong background in agile methodologies and team leadership. Eligible for UK Skilled Worker visa sponsorship.`,
+        'default': `Results-driven Software Engineer with extensive experience in software development and system architecture. Passionate about creating innovative solutions and mentoring development teams.`
+      },
+      'Healthcare': {
+        'Express Entry': `Registered Nurse with ${calculateExperience(data.work_experience)}+ years of clinical experience in acute care settings. Demonstrated expertise in patient assessment, care planning, and interdisciplinary collaboration. Committed to providing exceptional healthcare services in Canada.`,
+        'default': `Dedicated Healthcare Professional with comprehensive clinical experience and commitment to patient-centered care. Proven ability to work effectively in fast-paced medical environments.`
+      },
+      'Business Management': {
+        'Express Entry': `Strategic Business Manager with ${calculateExperience(data.work_experience)}+ years leading high-performing teams and driving operational excellence. Proven track record of increasing revenue and improving efficiency. Ready to contribute leadership skills to Canadian business landscape.`,
+        'default': `Results-oriented Business Manager with expertise in strategic planning, team leadership, and operational optimization. Strong analytical skills and proven ability to drive business growth.`
+      }
+    };
+
+    const industryTemplates = templates[industry] || templates['Software Engineering'];
+    return industryTemplates[visa] || industryTemplates['default'];
+  };
+
+  const calculateExperience = (workExperience) => {
+    if (!workExperience || workExperience.length === 0) return 3;
+
+    let totalYears = 0;
+    workExperience.forEach(exp => {
+      if (exp.startDate && exp.endDate) {
+        const start = new Date(exp.startDate);
+        const end = exp.endDate.toLowerCase().includes('present') ? new Date() : new Date(exp.endDate);
+        const years = (end - start) / (1000 * 60 * 60 * 24 * 365);
+        totalYears += Math.max(0, years);
+      }
+    });
+
+    return Math.max(1, Math.round(totalYears));
+  };
 
   // Map old template names to new template types
   const getTemplateMapping = (templateKey) => {
@@ -222,6 +267,72 @@ export default function ImprovedCVBuilder() {
       'Academic': 'graduate'
     };
     return templateMap[templateKey] || 'professional';
+  };
+
+  // Get realistic template data for preview
+  const getRealisticTemplateData = (templateKey) => {
+    const templateData = {
+      'SoftwareEngineer': {
+        personalInfo: {
+          fullName: "Alex Johnson",
+          email: "alex.johnson@email.com",
+          phone: "+1 (555) 123-4567",
+          location: "Toronto, ON, Canada",
+          jobTitle: "Senior Software Engineer"
+        },
+        summary: "Experienced Software Engineer with 5+ years developing scalable web applications using React, Node.js, and AWS. Proven track record of leading cross-functional teams and delivering high-quality solutions.",
+        experience: [
+          {
+            title: "Senior Software Engineer",
+            company: "Tech Solutions Inc.",
+            location: "Toronto, ON",
+            startDate: "2021",
+            endDate: "Present",
+            description: "• Led development of microservices architecture serving 100K+ users\n• Implemented CI/CD pipelines reducing deployment time by 60%"
+          }
+        ],
+        education: [
+          {
+            degree: "Bachelor of Computer Science",
+            institution: "University of Toronto",
+            location: "Toronto, ON",
+            graduationDate: "2019"
+          }
+        ],
+        skills: ["React", "Node.js", "AWS", "Python", "Docker", "Kubernetes"]
+      },
+      'Healthcare': {
+        personalInfo: {
+          fullName: "Sarah Chen",
+          email: "sarah.chen@email.com",
+          phone: "+1 (555) 987-6543",
+          location: "Vancouver, BC, Canada",
+          jobTitle: "Registered Nurse"
+        },
+        summary: "Dedicated Registered Nurse with 7+ years of clinical experience in acute care settings. Demonstrated expertise in patient assessment, care planning, and interdisciplinary collaboration.",
+        experience: [
+          {
+            title: "Registered Nurse",
+            company: "Vancouver General Hospital",
+            location: "Vancouver, BC",
+            startDate: "2018",
+            endDate: "Present",
+            description: "• Provided direct patient care for 15-20 patients per shift\n• Maintained 98% patient satisfaction scores"
+          }
+        ],
+        education: [
+          {
+            degree: "Bachelor of Science in Nursing",
+            institution: "University of British Columbia",
+            location: "Vancouver, BC",
+            graduationDate: "2017"
+          }
+        ],
+        skills: ["Patient Care", "Clinical Assessment", "Medication Administration", "Emergency Response"]
+      }
+    };
+
+    return templateData[templateKey] || templateData['SoftwareEngineer'];
   };
 
   const parseCVWithIntegration = async (uploadResult) => {
@@ -1168,23 +1279,106 @@ export default function ImprovedCVBuilder() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
+                  onClick={() => setShowATSAnalysis(!showATSAnalysis)}
+                  disabled={!extractedData}
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  ATS Analysis {extractedData ? '✓' : '(Upload CV first)'}
+                </Button>
+
+                <Button
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg"
+                  onClick={generateOptimizedCV}
+                  disabled={!extractedData || isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate CV
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Test ATS Button - Always Enabled */}
               <Button
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg"
-                onClick={generateOptimizedCV}
-                disabled={!extractedData || isGenerating}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => {
+                  console.log('Test ATS button clicked');
+                  setShowATSAnalysis(!showATSAnalysis);
+                  // Create dummy data if none exists
+                  if (!extractedData) {
+                    setExtractedData({
+                      name: "Test User",
+                      email: "test@example.com",
+                      phone: "+1 555-123-4567",
+                      location: "Toronto, ON",
+                      jobTitle: "Software Engineer",
+                      experience_summary: "Test summary for ATS analysis",
+                      skills: ["JavaScript", "React", "Node.js"],
+                      work_experience: [{
+                        title: "Software Engineer",
+                        company: "Test Company",
+                        location: "Toronto, ON",
+                        startDate: "2020",
+                        endDate: "Present",
+                        description: "Developed web applications"
+                      }],
+                      education: [{
+                        degree: "Computer Science",
+                        institution: "Test University",
+                        location: "Toronto, ON",
+                        graduationDate: "2020"
+                      }]
+                    });
+                  }
+                }}
               >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Generate Professional CV
-                  </>
-                )}
+                🧪 Test ATS Analysis (Always Works)
               </Button>
+
+              {showATSAnalysis && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm font-medium">Target Visa</Label>
+                    <Select value={targetVisa} onValueChange={setTargetVisa}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Express Entry">🇨🇦 Express Entry</SelectItem>
+                        <SelectItem value="Provincial Nominee">🇨🇦 Provincial Nominee</SelectItem>
+                        <SelectItem value="Skilled Worker (UK)">🇬🇧 UK Skilled Worker</SelectItem>
+                        <SelectItem value="Student Visa">🎓 Student Visa</SelectItem>
+                        <SelectItem value="Work Permit">💼 Work Permit</SelectItem>
+                        <SelectItem value="Family Sponsorship">👨‍👩‍👧‍👦 Family Sponsorship</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Target Industry</Label>
+                    <Select value={targetIndustry} onValueChange={setTargetIndustry}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Software Engineering">💻 Software Engineering</SelectItem>
+                        <SelectItem value="Healthcare">🏥 Healthcare</SelectItem>
+                        <SelectItem value="Skilled Trades">🔧 Skilled Trades</SelectItem>
+                        <SelectItem value="Business Management">📊 Business Management</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Export Format</Label>
@@ -1568,10 +1762,27 @@ export default function ImprovedCVBuilder() {
 
                 {/* Professional Summary */}
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Professional Summary
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Professional Summary
+                    </h3>
+                    {showATSAnalysis && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Generate enhanced summary based on target visa and industry
+                          const enhancedSummary = generateEnhancedSummary(extractedData, targetVisa, targetIndustry);
+                          updateField('experience_summary', enhancedSummary);
+                        }}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        <Zap className="w-3 h-3 mr-1" />
+                        Enhance
+                      </Button>
+                    )}
+                  </div>
                   <Textarea
                     value={extractedData.experience_summary || ''}
                     onChange={(e) => updateField('experience_summary', e.target.value)}
@@ -1749,6 +1960,31 @@ export default function ImprovedCVBuilder() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* ATS Analysis Panel */}
+      {showATSAnalysis && extractedData && (
+        <ATSScorePanel
+          cvData={{
+            personalInfo: {
+              fullName: extractedData.name || '',
+              email: extractedData.email || '',
+              phone: extractedData.phone || '',
+              location: extractedData.location || '',
+              jobTitle: extractedData.jobTitle || ''
+            },
+            summary: extractedData.experience_summary || '',
+            experience: extractedData.work_experience || [],
+            education: extractedData.education || [],
+            skills: extractedData.skills || []
+          }}
+          targetVisa={targetVisa}
+          targetIndustry={targetIndustry}
+          onApplyEnhancement={(category) => {
+            // Handle enhancement application
+            console.log('Applying enhancement for:', category);
+          }}
+        />
       )}
 
       {/* Live Preview */}

@@ -73,7 +73,7 @@ export class Lead {
     lead.lead_score = lead.calculateLeadScore();
 
     // Use Supabase if configured
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
           .from('leads')
@@ -131,7 +131,7 @@ export class Lead {
 
   static async getAll(filters = {}) {
     // Use Supabase if configured, otherwise fall back to mock data
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured()) {
       try {
         let query = supabase
           .from('leads')

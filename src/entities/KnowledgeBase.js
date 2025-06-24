@@ -1,3 +1,5 @@
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
+
 // KnowledgeBase Entity Class for Visa Flow Immigration Services
 export class KnowledgeBase {
   constructor(data = {}) {
@@ -72,7 +74,7 @@ export class KnowledgeBase {
 
   static async getAll(filters = {}) {
     // Check if we're in development mode and should use mock data
-    const isDevelopment = import.meta.env.DEV || !import.meta.env.VITE_SUPABASE_URL;
+    const isDevelopment = import.meta.env.DEV || !isSupabaseConfigured();
 
     if (isDevelopment) {
       // In development without Supabase, use mock data directly

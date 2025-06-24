@@ -6,6 +6,7 @@ import OccupationEditDialog from '@/components/knowledge-base/OccupationEditDial
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Shield, BookOpen } from 'lucide-react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function KnowledgeBase({ onNavigate }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -88,10 +89,12 @@ export default function KnowledgeBase({ onNavigate }) {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
-        <KnowledgeBasePanel
-          onEdit={isAdmin ? handleEdit : null}
-          onViewModeChange={setCurrentViewMode}
-        />
+        <ErrorBoundary>
+          <KnowledgeBasePanel
+            onEdit={isAdmin ? handleEdit : null}
+            onViewModeChange={setCurrentViewMode}
+          />
+        </ErrorBoundary>
       </div>
 
       {/* Admin Edit Dialogs */}

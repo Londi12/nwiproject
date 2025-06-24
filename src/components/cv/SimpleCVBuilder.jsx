@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CVPreview } from "./CVPreview";
 import { parseTextToCV } from "../../utils/cvParser";
 import { downloadCVAsPDF, generateA4PDF } from "../../utils/pdfGenerator";
-import { Upload, Eye, User, Briefcase, GraduationCap, Award, Download, FileText, AlertCircle } from "lucide-react";
+import { Upload, Eye, User, Briefcase, GraduationCap, Award, Download, FileText, AlertCircle, BarChart3, Target, Zap } from "lucide-react";
+import ATSScorePanel from "./ATSScorePanel";
 
 export default function SimpleCVBuilder() {
   const [activeTab, setActiveTab] = useState('personal');
@@ -33,6 +35,9 @@ export default function SimpleCVBuilder() {
   const [parseResult, setParseResult] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
+  const [showATSAnalysis, setShowATSAnalysis] = useState(false);
+  const [targetVisa, setTargetVisa] = useState('Express Entry');
+  const [targetIndustry, setTargetIndustry] = useState('Software Engineering');
   const fileInputRef = useRef(null);
   const cvPreviewRef = useRef(null);
 
@@ -588,6 +593,45 @@ export default function SimpleCVBuilder() {
                 <h2 className="text-lg font-semibold text-gray-900">Preview</h2>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Create test data if no CV data exists
+                    if (!cvData.personalInfo.fullName) {
+                      setCvData({
+                        personalInfo: {
+                          fullName: "Alex Johnson",
+                          email: "alex.johnson@email.com",
+                          phone: "+1 (555) 123-4567",
+                          location: "Toronto, ON, Canada",
+                          jobTitle: "Senior Software Engineer"
+                        },
+                        summary: "Experienced Software Engineer with 5+ years developing scalable web applications using React, Node.js, and AWS. Proven track record of leading cross-functional teams and delivering high-quality solutions.",
+                        experience: [{
+                          title: "Senior Software Engineer",
+                          company: "Tech Solutions Inc.",
+                          location: "Toronto, ON",
+                          startDate: "2021",
+                          endDate: "Present",
+                          description: "Led development of microservices architecture serving 100K+ users. Implemented CI/CD pipelines reducing deployment time by 60%."
+                        }],
+                        education: [{
+                          degree: "Bachelor of Computer Science",
+                          institution: "University of Toronto",
+                          location: "Toronto, ON",
+                          graduationDate: "2019"
+                        }],
+                        skills: ["React", "Node.js", "AWS", "Python", "Docker", "Kubernetes"]
+                      });
+                    }
+                    setShowATSAnalysis(!showATSAnalysis);
+                  }}
+                  className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+                >
+                  <BarChart3 className="w-4 h-4 mr-1" />
+                  {cvData.personalInfo.fullName ? 'ATS Analysis' : '🧪 Test ATS Analysis'}
+                </Button>
                 <Button variant="outline" size="sm">
                   <Eye className="w-4 h-4 mr-1" />
                   Full Preview
@@ -631,6 +675,48 @@ export default function SimpleCVBuilder() {
               </div>
             </div>
 
+            {/* ATS Analysis Configuration */}
+            {showATSAnalysis && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  ATS Analysis Configuration
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-medium text-blue-800">Target Visa</Label>
+                    <Select value={targetVisa} onValueChange={setTargetVisa}>
+                      <SelectTrigger className="bg-white text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Express Entry">🇨🇦 Express Entry</SelectItem>
+                        <SelectItem value="Provincial Nominee">🇨🇦 Provincial Nominee</SelectItem>
+                        <SelectItem value="Skilled Worker (UK)">🇬🇧 UK Skilled Worker</SelectItem>
+                        <SelectItem value="Student Visa">🎓 Student Visa</SelectItem>
+                        <SelectItem value="Work Permit">💼 Work Permit</SelectItem>
+                        <SelectItem value="Family Sponsorship">👨‍👩‍👧‍👦 Family Sponsorship</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-blue-800">Target Industry</Label>
+                    <Select value={targetIndustry} onValueChange={setTargetIndustry}>
+                      <SelectTrigger className="bg-white text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Software Engineering">💻 Software Engineering</SelectItem>
+                        <SelectItem value="Healthcare">🏥 Healthcare</SelectItem>
+                        <SelectItem value="Skilled Trades">🔧 Skilled Trades</SelectItem>
+                        <SelectItem value="Business Management">📊 Business Management</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Download Error Message */}
             {downloadError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -654,6 +740,33 @@ export default function SimpleCVBuilder() {
             </div>
           </div>
         </div>
+
+        {/* ATS Analysis Panel */}
+        {showATSAnalysis && (
+          <div className="mt-6">
+            <ATSScorePanel
+              cvData={{
+                personalInfo: {
+                  fullName: cvData.personalInfo.fullName || '',
+                  email: cvData.personalInfo.email || '',
+                  phone: cvData.personalInfo.phone || '',
+                  location: cvData.personalInfo.location || '',
+                  jobTitle: cvData.personalInfo.jobTitle || ''
+                },
+                summary: cvData.summary || '',
+                experience: cvData.experience || [],
+                education: cvData.education || [],
+                skills: cvData.skills || []
+              }}
+              targetVisa={targetVisa}
+              targetIndustry={targetIndustry}
+              onApplyEnhancement={(category) => {
+                console.log('Applying enhancement for:', category);
+                // Handle enhancement application here
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
