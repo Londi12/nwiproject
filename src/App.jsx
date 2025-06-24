@@ -13,7 +13,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showAdminPanel, setShowAdminPanel] = useState(import.meta.env.DEV); // Show in development by default
+  const [showAdminPanel, setShowAdminPanel] = useState(true); // Always show admin panel
   const [adminKeySequence, setAdminKeySequence] = useState('');
 
   // Debug navigation
