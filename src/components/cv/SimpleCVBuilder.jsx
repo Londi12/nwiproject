@@ -627,10 +627,9 @@ export default function SimpleCVBuilder() {
                     }
                     setShowATSAnalysis(!showATSAnalysis);
                   }}
-                  className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
                 >
                   <BarChart3 className="w-4 h-4 mr-1" />
-                  {cvData.personalInfo.fullName ? 'ATS Analysis' : '🧪 Test ATS Analysis'}
+                  Analyze CV
                 </Button>
                 <Button variant="outline" size="sm">
                   <Eye className="w-4 h-4 mr-1" />

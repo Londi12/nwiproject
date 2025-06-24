@@ -3,68 +3,68 @@
 
 import { isSupabaseConfigured } from '../lib/supabase.js';
 
-// Immigration-specific ATS scoring weights
+// Enhanced ATS scoring weights - HR + Immigration optimized
 export const ATS_SCORING_WEIGHTS = {
-  // Core ATS factors (60% of total score)
+  // Core ATS factors (70% of total score) - HR Priority
   FORMATTING: {
-    weight: 15,
+    weight: 20, // Increased - critical for ATS parsing
     factors: {
-      standardFonts: 3,
-      properHeadings: 3,
-      consistentSpacing: 2,
-      bulletPoints: 2,
+      standardFonts: 4,
+      properHeadings: 4,
+      consistentSpacing: 3,
+      bulletPoints: 3,
       readableLayout: 3,
-      noGraphics: 2
+      noGraphics: 3
     }
   },
   KEYWORDS: {
-    weight: 20,
+    weight: 25, // Increased - most critical for ATS matching
     factors: {
-      jobTitleMatch: 5,
-      skillsMatch: 5,
-      industryTerms: 4,
+      jobTitleMatch: 7,
+      skillsMatch: 7,
+      industryTerms: 5,
       certificationMatch: 3,
       softSkills: 3
     }
   },
   STRUCTURE: {
-    weight: 15,
+    weight: 10, // Reduced - less critical than keywords/formatting
     factors: {
-      contactInfo: 4,
-      workExperience: 4,
-      education: 3,
-      skills: 2,
-      chronologicalOrder: 2
+      contactInfo: 3,
+      workExperience: 3,
+      education: 2,
+      skills: 1,
+      chronologicalOrder: 1
     }
   },
   CONTENT_QUALITY: {
-    weight: 10,
+    weight: 15, // Increased - critical for HR review
     factors: {
-      quantifiedAchievements: 3,
-      actionVerbs: 2,
-      relevantExperience: 3,
-      completeness: 2
+      quantifiedAchievements: 5,
+      actionVerbs: 3,
+      relevantExperience: 4,
+      completeness: 3
     }
   },
 
-  // Immigration-specific factors (40% of total score)
+  // Immigration-specific factors (30% of total score) - Balanced approach
   IMMIGRATION_READINESS: {
-    weight: 25,
+    weight: 20, // Reduced but still significant
     factors: {
-      visaTypeAlignment: 8,
-      occupationMatch: 6,
-      experienceYears: 5,
+      visaTypeAlignment: 6,
+      occupationMatch: 5,
+      experienceYears: 4,
       educationLevel: 3,
-      languageSkills: 3
+      languageSkills: 2
     }
   },
   COMPLIANCE: {
-    weight: 15,
+    weight: 10, // Reduced - important but not primary ATS factor
     factors: {
-      documentationReady: 5,
-      certificationValid: 4,
-      workPermitEligible: 3,
-      backgroundCheck: 3
+      documentationReady: 3,
+      certificationValid: 3,
+      workPermitEligible: 2,
+      backgroundCheck: 2
     }
   }
 };
@@ -112,36 +112,74 @@ export const VISA_REQUIREMENTS = {
     minExperience: 1,
     preferredEducation: ['Bachelor', 'Master'],
     keySkills: ['English', 'Sponsorship Eligible'],
-    salaryThreshold: 25600,
-    sponsorshipRequired: 30
+    salaryThreshold: 26200, // Updated to current 2024 threshold
+    sponsorshipRequired: 30,
+    englishRequirement: 'B1 minimum',
+    skillsShortageBonus: 10
   }
 };
 
-// Industry-specific ATS keywords for immigration
+// Enhanced industry-specific ATS keywords - 2024 updated
 export const INDUSTRY_KEYWORDS = {
   'Software Engineering': {
-    technical: ['JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes', 'Agile', 'Scrum'],
-    soft: ['Problem Solving', 'Team Collaboration', 'Code Review', 'Technical Leadership'],
-    certifications: ['AWS Certified', 'Google Cloud', 'Microsoft Azure', 'Scrum Master'],
-    immigration: ['NOC 2173', 'Software Engineer', 'Full Stack Developer', 'Tech Lead']
+    technical: [
+      // Modern Frontend
+      'React', 'TypeScript', 'Next.js', 'Vue.js', 'Angular', 'JavaScript', 'HTML5', 'CSS3',
+      // Backend & Cloud
+      'Node.js', 'Python', 'Java', 'C#', 'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes',
+      // Data & AI
+      'GraphQL', 'REST API', 'MongoDB', 'PostgreSQL', 'Redis', 'Machine Learning', 'AI',
+      // DevOps & Tools
+      'CI/CD', 'Jenkins', 'Git', 'Terraform', 'Microservices', 'Agile', 'Scrum'
+    ],
+    soft: ['Problem Solving', 'Team Collaboration', 'Code Review', 'Technical Leadership', 'Mentoring', 'Cross-functional'],
+    certifications: ['AWS Certified', 'Google Cloud Professional', 'Microsoft Azure', 'Scrum Master', 'PMP', 'Kubernetes Certified'],
+    immigration: ['NOC 21231', 'NOC 21230', 'Software Engineer', 'Full Stack Developer', 'Tech Lead', 'Senior Developer']
   },
   'Healthcare': {
-    technical: ['Patient Care', 'Medical Records', 'Clinical Assessment', 'Treatment Planning'],
-    soft: ['Compassion', 'Communication', 'Critical Thinking', 'Attention to Detail'],
-    certifications: ['RN License', 'BLS', 'ACLS', 'Medical License'],
-    immigration: ['NOC 3012', 'Registered Nurse', 'Healthcare Professional']
+    technical: [
+      // Clinical Skills
+      'Patient Care', 'Clinical Assessment', 'Treatment Planning', 'Medication Administration',
+      // Technology
+      'EMR', 'Epic', 'Cerner', 'MEDITECH', 'Electronic Health Records', 'Telehealth',
+      // Specializations
+      'ICU', 'Emergency Medicine', 'Surgical', 'Pediatric', 'Geriatric', 'Mental Health',
+      // Compliance
+      'HIPAA', 'Joint Commission', 'Quality Assurance', 'Infection Control'
+    ],
+    soft: ['Compassion', 'Communication', 'Critical Thinking', 'Attention to Detail', 'Empathy', 'Cultural Sensitivity'],
+    certifications: ['RN License', 'BLS', 'ACLS', 'PALS', 'Medical License', 'CCRN', 'CNA', 'LPN'],
+    immigration: ['NOC 31301', 'NOC 32101', 'Registered Nurse', 'Healthcare Professional', 'Licensed Practical Nurse']
   },
   'Skilled Trades': {
-    technical: ['Electrical Systems', 'Plumbing', 'HVAC', 'Safety Protocols', 'Blueprint Reading'],
-    soft: ['Problem Solving', 'Physical Stamina', 'Attention to Detail', 'Safety Conscious'],
-    certifications: ['Trade License', 'Safety Certification', 'Apprenticeship', 'Red Seal'],
-    immigration: ['NOC 7241', 'NOC 7251', 'Skilled Tradesperson', 'Journeyman']
+    technical: [
+      // Electrical
+      'Electrical Systems', 'Wiring', 'Circuit Design', 'Motor Control', 'PLC Programming',
+      // Mechanical
+      'Plumbing', 'HVAC', 'Welding', 'Fabrication', 'Hydraulics', 'Pneumatics',
+      // Safety & Standards
+      'OSHA', 'Safety Protocols', 'Blueprint Reading', 'Code Compliance', 'Quality Control',
+      // Modern Tech
+      'Building Automation', 'Smart Systems', 'Energy Efficiency', 'Renewable Energy'
+    ],
+    soft: ['Problem Solving', 'Physical Stamina', 'Attention to Detail', 'Safety Conscious', 'Team Coordination'],
+    certifications: ['Red Seal', 'Trade License', 'OSHA 30', 'Apprenticeship', 'Journeyman', 'Master Electrician'],
+    immigration: ['NOC 72200', 'NOC 72310', 'NOC 72400', 'Skilled Tradesperson', 'Journeyman', 'Master Tradesperson']
   },
   'Business Management': {
-    technical: ['P&L Management', 'Strategic Planning', 'Budget Management', 'Team Leadership'],
-    soft: ['Leadership', 'Communication', 'Decision Making', 'Negotiation'],
-    certifications: ['MBA', 'PMP', 'Six Sigma', 'CPA'],
-    immigration: ['NOC 0011', 'NOC 0111', 'Manager', 'Executive']
+    technical: [
+      // Financial
+      'P&L Management', 'Budget Management', 'Financial Analysis', 'Cost Control', 'ROI Analysis',
+      // Strategy
+      'Strategic Planning', 'Business Development', 'Market Analysis', 'Competitive Intelligence',
+      // Operations
+      'Process Improvement', 'Supply Chain', 'Vendor Management', 'Quality Management',
+      // Technology
+      'ERP', 'CRM', 'Business Intelligence', 'Data Analytics', 'Digital Transformation'
+    ],
+    soft: ['Leadership', 'Communication', 'Decision Making', 'Negotiation', 'Change Management', 'Stakeholder Management'],
+    certifications: ['MBA', 'PMP', 'Six Sigma', 'CPA', 'CFA', 'SHRM', 'Lean Six Sigma'],
+    immigration: ['NOC 10010', 'NOC 10011', 'NOC 10020', 'Manager', 'Executive', 'Director', 'Senior Manager']
   }
 };
 
@@ -195,63 +233,258 @@ export function calculateATSScore(cvData, targetVisa = 'Express Entry', targetIn
 }
 
 /**
- * Calculate formatting score based on ATS-friendly formatting
+ * Enhanced formatting score - ATS parsing accuracy focused
  */
 function calculateFormattingScore(cvData) {
   let score = 0;
   let feedback = [];
   const maxScore = ATS_SCORING_WEIGHTS.FORMATTING.weight;
 
-  // Check for standard fonts (simulated - in real implementation would check actual formatting)
-  if (cvData.personalInfo?.fullName && cvData.personalInfo.fullName.length > 0) {
+  // ATS-friendly structure validation (4 points)
+  const hasStandardSections = ['personalInfo', 'experience', 'education', 'skills'].every(section =>
+    cvData[section] && (Array.isArray(cvData[section]) ? cvData[section].length > 0 : Object.keys(cvData[section]).length > 0)
+  );
+
+  if (hasStandardSections) {
+    score += 4;
+    feedback.push("Standard ATS sections detected");
+  } else {
+    feedback.push("Missing standard sections - ensure Personal Info, Experience, Education, Skills are present");
+  }
+
+  // Contact information formatting (4 points)
+  const contactScore = validateContactFormatting(cvData.personalInfo);
+  score += contactScore.score;
+  feedback.push(...contactScore.feedback);
+
+  // Experience formatting quality (3 points)
+  const experienceFormatting = validateExperienceFormatting(cvData.experience);
+  score += experienceFormatting.score;
+  feedback.push(...experienceFormatting.feedback);
+
+  // Consistent date formatting (3 points)
+  const dateFormatting = validateDateFormatting(cvData);
+  score += dateFormatting.score;
+  feedback.push(...dateFormatting.feedback);
+
+  // Professional summary structure (3 points)
+  if (cvData.summary && cvData.summary.length >= 100 && cvData.summary.length <= 300) {
     score += 3;
+    feedback.push("Professional summary length optimal for ATS");
+  } else if (cvData.summary && cvData.summary.length > 0) {
+    score += 1.5;
+    feedback.push("Professional summary present but consider 100-300 character range");
   } else {
-    feedback.push("Add clear contact information with full name");
+    feedback.push("Add professional summary (100-300 characters optimal)");
   }
 
-  // Check for proper headings structure
-  if (cvData.experience?.length > 0 && cvData.education?.length > 0) {
-    score += 3;
-    feedback.push("Good section organization detected");
-  } else {
-    feedback.push("Ensure clear section headings for Experience and Education");
-  }
-
-  // Check for bullet points in experience
-  if (cvData.experience?.some(exp => exp.description && exp.description.length > 20)) {
-    score += 2;
-    feedback.push("Experience descriptions present");
-  } else {
-    feedback.push("Add detailed bullet points for work experience");
-  }
-
-  // Check for consistent contact info
-  if (cvData.personalInfo?.email && cvData.personalInfo?.phone) {
-    score += 2;
-    feedback.push("Complete contact information provided");
-  } else {
-    feedback.push("Include email and phone number");
-  }
-
-  // Readable layout check
-  if (cvData.summary && cvData.summary.length > 50) {
-    score += 3;
-    feedback.push("Professional summary included");
-  } else {
-    feedback.push("Add a compelling professional summary");
-  }
-
-  // No graphics penalty (assume good if structured data exists)
-  if (Object.keys(cvData).length >= 4) {
-    score += 2;
-  }
+  // Skills formatting (3 points)
+  const skillsFormatting = validateSkillsFormatting(cvData.skills);
+  score += skillsFormatting.score;
+  feedback.push(...skillsFormatting.feedback);
 
   return {
     score: Math.min(score, maxScore),
     maxScore,
     percentage: Math.round((Math.min(score, maxScore) / maxScore) * 100),
-    feedback
+    feedback,
+    atsCompatibility: score >= (maxScore * 0.8) ? 'High' : score >= (maxScore * 0.6) ? 'Medium' : 'Low'
   };
+}
+
+/**
+ * Validate contact information formatting for ATS
+ */
+function validateContactFormatting(personalInfo) {
+  let score = 0;
+  let feedback = [];
+  const maxScore = 4;
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (personalInfo?.email && emailRegex.test(personalInfo.email)) {
+    score += 1.5;
+    feedback.push("Valid email format");
+  } else {
+    feedback.push("Add valid email address");
+  }
+
+  // Phone number validation
+  const phoneRegex = /[\+]?[\d\s\-\(\)]{10,}/;
+  if (personalInfo?.phone && phoneRegex.test(personalInfo.phone)) {
+    score += 1.5;
+    feedback.push("Valid phone format");
+  } else {
+    feedback.push("Add properly formatted phone number");
+  }
+
+  // Location formatting
+  if (personalInfo?.location && personalInfo.location.includes(',')) {
+    score += 1;
+    feedback.push("Location properly formatted");
+  } else if (personalInfo?.location) {
+    score += 0.5;
+    feedback.push("Consider format: City, Province/State, Country");
+  } else {
+    feedback.push("Add location information");
+  }
+
+  return { score: Math.min(score, maxScore), feedback };
+}
+
+/**
+ * Validate experience section formatting
+ */
+function validateExperienceFormatting(experiences) {
+  let score = 0;
+  let feedback = [];
+  const maxScore = 3;
+
+  if (!experiences || experiences.length === 0) {
+    feedback.push("Add work experience entries");
+    return { score: 0, feedback };
+  }
+
+  // Check for bullet point formatting
+  const hasBulletPoints = experiences.some(exp =>
+    exp.description && (exp.description.includes('•') || exp.description.includes('-') || exp.description.includes('*'))
+  );
+
+  if (hasBulletPoints) {
+    score += 1.5;
+    feedback.push("Bullet points detected in experience");
+  } else {
+    feedback.push("Use bullet points for experience descriptions");
+  }
+
+  // Check for consistent structure
+  const wellStructured = experiences.filter(exp =>
+    exp.title && exp.company && exp.startDate && exp.description
+  ).length;
+
+  if (wellStructured === experiences.length) {
+    score += 1.5;
+    feedback.push("All experience entries well-structured");
+  } else if (wellStructured > 0) {
+    score += 0.75;
+    feedback.push("Some experience entries missing details");
+  } else {
+    feedback.push("Ensure all experience entries have title, company, dates, description");
+  }
+
+  return { score: Math.min(score, maxScore), feedback };
+}
+
+/**
+ * Validate date formatting consistency
+ */
+function validateDateFormatting(cvData) {
+  let score = 0;
+  let feedback = [];
+  const maxScore = 3;
+
+  const allDates = [];
+
+  // Collect dates from experience
+  if (cvData.experience) {
+    cvData.experience.forEach(exp => {
+      if (exp.startDate) allDates.push(exp.startDate);
+      if (exp.endDate) allDates.push(exp.endDate);
+    });
+  }
+
+  // Collect dates from education
+  if (cvData.education) {
+    cvData.education.forEach(edu => {
+      if (edu.graduationDate) allDates.push(edu.graduationDate);
+    });
+  }
+
+  if (allDates.length === 0) {
+    feedback.push("Add dates to experience and education");
+    return { score: 0, feedback };
+  }
+
+  // Check for consistent date format
+  const dateFormats = {
+    year: /^\d{4}$/,
+    monthYear: /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{4}$/i,
+    fullDate: /^\d{1,2}\/\d{1,2}\/\d{4}$/
+  };
+
+  let formatConsistency = 0;
+  Object.values(dateFormats).forEach(format => {
+    const matchingDates = allDates.filter(date => format.test(date)).length;
+    if (matchingDates > formatConsistency) {
+      formatConsistency = matchingDates;
+    }
+  });
+
+  const consistencyRatio = formatConsistency / allDates.length;
+
+  if (consistencyRatio >= 0.8) {
+    score += 3;
+    feedback.push("Consistent date formatting");
+  } else if (consistencyRatio >= 0.6) {
+    score += 2;
+    feedback.push("Mostly consistent date formatting");
+  } else {
+    score += 1;
+    feedback.push("Improve date formatting consistency (use YYYY or Mon YYYY format)");
+  }
+
+  return { score: Math.min(score, maxScore), feedback };
+}
+
+/**
+ * Validate skills section formatting
+ */
+function validateSkillsFormatting(skills) {
+  let score = 0;
+  let feedback = [];
+  const maxScore = 3;
+
+  if (!skills) {
+    feedback.push("Add skills section");
+    return { score: 0, feedback };
+  }
+
+  let skillsArray = [];
+  if (typeof skills === 'string') {
+    skillsArray = skills.split(',').map(s => s.trim()).filter(Boolean);
+  } else if (Array.isArray(skills)) {
+    skillsArray = skills;
+  }
+
+  if (skillsArray.length === 0) {
+    feedback.push("Add skills to skills section");
+    return { score: 0, feedback };
+  }
+
+  // Check skills count (optimal 8-15 skills)
+  if (skillsArray.length >= 8 && skillsArray.length <= 15) {
+    score += 1.5;
+    feedback.push("Optimal number of skills listed");
+  } else if (skillsArray.length >= 5) {
+    score += 1;
+    feedback.push("Good number of skills - consider 8-15 for optimal ATS matching");
+  } else {
+    score += 0.5;
+    feedback.push("Add more skills (8-15 recommended)");
+  }
+
+  // Check for skill categorization indicators
+  const hasCategories = typeof skills === 'string' &&
+    (skills.includes(':') || skills.includes('Technical:') || skills.includes('Soft:'));
+
+  if (hasCategories) {
+    score += 1.5;
+    feedback.push("Skills categorization detected");
+  } else {
+    feedback.push("Consider categorizing skills (Technical, Soft Skills, Languages)");
+  }
+
+  return { score: Math.min(score, maxScore), feedback };
 }
 
 /**
@@ -947,37 +1180,59 @@ function getReadinessRecommendation(score, targetVisa) {
 }
 
 /**
- * Get competitive analysis based on industry benchmarks
+ * Get competitive analysis based on realistic industry benchmarks
  */
 function getCompetitiveAnalysis(totalScore, targetIndustry) {
+  // Updated realistic benchmarks based on HR industry standards
   const industryBenchmarks = {
-    'Software Engineering': { excellent: 85, good: 75, average: 65 },
-    'Healthcare': { excellent: 88, good: 78, average: 68 },
-    'Skilled Trades': { excellent: 82, good: 72, average: 62 },
-    'Business Management': { excellent: 87, good: 77, average: 67 }
+    'Software Engineering': {
+      excellent: 82, good: 72, average: 62,
+      context: 'Highly competitive field with emphasis on technical skills'
+    },
+    'Healthcare': {
+      excellent: 80, good: 70, average: 60,
+      context: 'Focus on certifications and clinical experience'
+    },
+    'Skilled Trades': {
+      excellent: 78, good: 68, average: 58,
+      context: 'Emphasis on certifications and hands-on experience'
+    },
+    'Business Management': {
+      excellent: 84, good: 74, average: 64,
+      context: 'Leadership experience and quantified achievements critical'
+    }
   };
 
   const benchmark = industryBenchmarks[targetIndustry] || industryBenchmarks['Software Engineering'];
 
   let competitiveness = 'Below Average';
-  let marketPosition = 'Bottom 25%';
+  let marketPosition = 'Bottom 30%';
+  let percentile = Math.round((totalScore / 100) * 100);
 
   if (totalScore >= benchmark.excellent) {
     competitiveness = 'Excellent';
-    marketPosition = 'Top 10%';
+    marketPosition = 'Top 15%';
+    percentile = Math.min(95, 85 + Math.round((totalScore - benchmark.excellent) / 2));
   } else if (totalScore >= benchmark.good) {
     competitiveness = 'Good';
-    marketPosition = 'Top 25%';
+    marketPosition = 'Top 35%';
+    percentile = Math.round(60 + ((totalScore - benchmark.good) / (benchmark.excellent - benchmark.good)) * 25);
   } else if (totalScore >= benchmark.average) {
     competitiveness = 'Average';
     marketPosition = 'Middle 50%';
+    percentile = Math.round(35 + ((totalScore - benchmark.average) / (benchmark.good - benchmark.average)) * 25);
+  } else {
+    percentile = Math.round((totalScore / benchmark.average) * 35);
   }
 
   return {
     level: competitiveness,
     marketPosition,
+    percentile,
     industryBenchmark: benchmark,
-    recommendation: getCompetitiveRecommendation(competitiveness, targetIndustry)
+    context: benchmark.context,
+    recommendation: getCompetitiveRecommendation(competitiveness, targetIndustry),
+    improvementNeeded: Math.max(0, benchmark.good - totalScore)
   };
 }
 
